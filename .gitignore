@@ -3,3 +3,6 @@ config/google_credentials.json
 venv/
 __pycache__/
 *.pyc
+phase3_candidates.json
+phase3_results.json
+ugc-monitor-api/
