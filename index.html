@@ -26,400 +26,123 @@
     --blue: #6a9fd8;
     --blue-dim: #e6f0fb;
   }
-
   * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text); font-family: 'Geist', sans-serif; font-weight: 300; min-height: 100vh; line-height: 1.6; }
+  .wrap { max-width: 860px; margin: 0 auto; padding: 60px 32px 100px; }
+  header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 48px; }
+  .logo-block .eyebrow { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.18em; color: var(--muted); text-transform: uppercase; margin-bottom: 6px; }
+  .logo-block h1 { font-family: 'Instrument Serif', serif; font-size: 28px; font-weight: 400; color: var(--text); letter-spacing: -0.01em; }
+  .logo-block h1 em { font-style: italic; color: var(--accent); }
+  .status-dot { display: flex; align-items: center; gap: 7px; font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); margin-top: 8px; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--muted2); }
+  .dot.ready { background: var(--accent); box-shadow: 0 0 6px var(--accent); }
+  .dot.running { background: var(--amber); animation: pulse 1.2s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 4px var(--amber);}50%{opacity:.4;box-shadow:none;} }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'Geist', sans-serif;
-    font-weight: 300;
-    min-height: 100vh;
-    line-height: 1.6;
-  }
+  .input-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .input-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: block; }
+  .url-row { display: flex; gap: 10px; margin-bottom: 16px; }
+  .url-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
+  .url-input::placeholder { color: var(--muted2); }
+  .url-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
 
-  .wrap {
-    max-width: 860px;
-    margin: 0 auto;
-    padding: 60px 32px 100px;
-  }
-
-  /* header */
-  header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-bottom: 48px;
-  }
-
-  .logo-block .eyebrow {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.18em;
-    color: var(--muted);
-    text-transform: uppercase;
-    margin-bottom: 6px;
-  }
-
-  .logo-block h1 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 28px;
-    font-weight: 400;
-    color: var(--text);
-    letter-spacing: -0.01em;
-  }
-
-  .logo-block h1 em {
-    font-style: italic;
-    color: var(--accent);
-  }
-
-  .status-dot {
+  /* 이미지 업로드 영역 */
+  .upload-area {
+    border: 1.5px dashed var(--border2);
+    border-radius: 10px;
+    padding: 18px;
     display: flex;
     align-items: center;
-    gap: 7px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 8px;
-  }
-
-  .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--muted2);
-  }
-  .dot.ready {
-    background: var(--accent);
-    box-shadow: 0 0 6px var(--accent);
-  }
-  .dot.running {
-    background: var(--amber);
-    animation: pulse 1.2s ease-in-out infinite;
-  }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; box-shadow: 0 0 4px var(--amber); }
-    50% { opacity: 0.4; box-shadow: none; }
-  }
-
-  /* input section */
-  .input-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 28px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  }
-
-  .input-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 12px;
-    display: block;
-  }
-
-  .url-row {
-    display: flex;
-    gap: 10px;
-  }
-
-  .url-input {
-    flex: 1;
-    background: var(--bg);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 16px;
-    font-family: 'DM Mono', monospace;
-    font-size: 12px;
-    color: var(--text);
-    outline: none;
-    transition: border-color 0.2s, box-shadow 0.2s;
-  }
-
-  .url-input::placeholder { color: var(--muted2); }
-  .url-input:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-light);
-  }
-
-  .run-btn {
-    background: var(--accent);
-    color: #ffffff;
-    border: none;
-    border-radius: 8px;
-    padding: 12px 24px;
-    font-family: 'Geist', sans-serif;
-    font-size: 13px;
-    font-weight: 500;
+    gap: 16px;
     cursor: pointer;
-    white-space: nowrap;
-    transition: background 0.15s, transform 0.1s;
+    transition: border-color 0.2s, background 0.2s;
+    margin-bottom: 16px;
+    background: var(--bg);
   }
+  .upload-area:hover { border-color: var(--accent); background: var(--accent-light); }
+  .upload-area.has-image { border-color: var(--accent); background: var(--accent-light); border-style: solid; }
+  .upload-preview {
+    width: 56px; height: 56px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 1px solid var(--accent);
+    flex-shrink: 0;
+    display: none;
+  }
+  .upload-preview.visible { display: block; }
+  .upload-icon {
+    width: 56px; height: 56px;
+    border-radius: 8px;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 20px;
+  }
+  .upload-icon.hidden { display: none; }
+  .upload-text { flex: 1; }
+  .upload-text .upload-title { font-size: 13px; color: var(--text); margin-bottom: 3px; }
+  .upload-text .upload-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
+  #fileInput { display: none; }
 
+  .run-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 13px 24px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s, transform 0.1s; }
   .run-btn:hover { background: var(--accent-dark); }
-  .run-btn:active { transform: scale(0.98); }
+  .run-btn:active { transform: scale(0.99); }
   .run-btn:disabled { background: var(--muted2); cursor: not-allowed; }
+  .input-hint { font-size: 11px; color: var(--muted); margin-top: 10px; }
 
-  .input-hint {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 10px;
-  }
-
-  .progress-bar-wrap {
-    height: 3px;
-    background: var(--border);
-    border-radius: 99px;
-    overflow: hidden;
-    margin-top: 18px;
-    display: none;
-  }
+  .progress-bar-wrap { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 18px; display: none; }
   .progress-bar-wrap.visible { display: block; }
-
-  .progress-bar {
-    height: 100%;
-    background: var(--accent);
-    width: 0%;
-    transition: width 0.4s ease;
-    border-radius: 99px;
-  }
-
-  .progress-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--muted);
-    margin-top: 8px;
-    display: none;
-  }
+  .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; border-radius: 99px; }
+  .progress-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 8px; display: none; }
   .progress-label.visible { display: block; }
 
-  /* summary cards */
-  .summary-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 12px;
-    margin-bottom: 24px;
-  }
-
-  .summary-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 22px 20px;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-    transition: border-color 0.25s, background 0.25s;
-  }
-
+  .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
+  .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: border-color 0.25s, background 0.25s; }
   .summary-card.active-feed    { border-color: var(--accent); background: var(--green-dim); }
   .summary-card.active-story   { border-color: #d4924a; background: var(--amber-dim); }
   .summary-card.active-profile { border-color: #5888c0; background: var(--blue-dim); }
-
-  .card-label {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--muted);
-    margin-bottom: 10px;
-  }
-
-  .card-count {
-    font-family: 'Instrument Serif', serif;
-    font-size: 44px;
-    font-weight: 400;
-    line-height: 1;
-    color: var(--muted2);
-    transition: color 0.3s;
-  }
-
+  .card-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; }
+  .card-count { font-family: 'Instrument Serif', serif; font-size: 44px; font-weight: 400; line-height: 1; color: var(--muted2); transition: color 0.3s; }
   .summary-card.active-feed    .card-count { color: var(--accent-dark); }
   .summary-card.active-story   .card-count { color: #c07840; }
   .summary-card.active-profile .card-count { color: #4878b8; }
+  .card-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
-  .card-sub {
-    font-size: 11px;
-    color: var(--muted);
-    margin-top: 6px;
-  }
-
-  /* results */
-  .results-section {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    overflow: hidden;
-    box-shadow: 0 1px 4px rgba(0,0,0,0.04);
-  }
-
-  .results-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 16px 24px;
-    border-bottom: 1px solid var(--border);
-    background: var(--surface);
-  }
-
-  .results-title {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-    color: var(--muted);
-  }
-
+  .results-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
+  .results-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  .results-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
   .filter-tabs { display: flex; gap: 4px; }
-
-  .filter-tab {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    padding: 4px 10px;
-    border-radius: 5px;
-    border: 1px solid transparent;
-    cursor: pointer;
-    color: var(--muted);
-    background: transparent;
-    transition: all 0.15s;
-    letter-spacing: 0.04em;
-  }
-
+  .filter-tab { font-family: 'DM Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 5px; border: 1px solid transparent; cursor: pointer; color: var(--muted); background: transparent; transition: all 0.15s; }
   .filter-tab:hover { color: var(--text); background: var(--surface2); }
-  .filter-tab.active {
-    color: var(--accent-dark);
-    border-color: var(--accent);
-    background: var(--accent-light);
-  }
+  .filter-tab.active { color: var(--accent-dark); border-color: var(--accent); background: var(--accent-light); }
 
-  .table-row {
-    display: grid;
-    grid-template-columns: 180px 1fr 100px 140px;
-    align-items: center;
-    padding: 14px 24px;
-    border-bottom: 1px solid var(--border);
-    font-size: 13px;
-    transition: background 0.12s;
-  }
+  .table-row { display: grid; grid-template-columns: 180px 1fr 100px 140px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.12s; }
   .table-row:last-child { border-bottom: none; }
   .table-row:hover { background: var(--surface2); }
-
-  .table-row.head {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    color: var(--muted);
-    padding: 10px 24px;
-    background: var(--bg);
-  }
-
+  .table-row.head { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 24px; background: var(--bg); }
   .col-user { display: flex; align-items: center; gap: 10px; }
-
-  .avatar {
-    width: 28px; height: 28px;
-    border-radius: 50%;
-    background: var(--accent-light);
-    border: 1px solid var(--accent);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-family: 'DM Mono', monospace;
-    font-size: 9px;
-    color: var(--accent-dark);
-    flex-shrink: 0;
-  }
-
-  .username { font-weight: 400; font-size: 13px; color: var(--text); }
+  .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-light); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent-dark); flex-shrink: 0; }
+  .username { font-weight: 400; font-size: 13px; }
   .col-detected { color: var(--muted); font-size: 12px; }
-
-  .type-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    padding: 3px 9px;
-    border-radius: 99px;
-    letter-spacing: 0.03em;
-  }
-
+  .type-badge { display: inline-flex; align-items: center; gap: 5px; font-family: 'DM Mono', monospace; font-size: 10px; padding: 3px 9px; border-radius: 99px; }
   .type-badge.feed    { background: var(--green-dim); color: var(--accent-dark); border: 1px solid var(--accent); }
   .type-badge.story   { background: var(--amber-dim); color: #b06830; border: 1px solid #e09a5a; }
   .type-badge.profile { background: var(--blue-dim);  color: #3a68a8; border: 1px solid #6a9fd8; }
-
   .badge-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; }
-
-  .col-link a {
-    font-family: 'DM Mono', monospace;
-    font-size: 10px;
-    color: var(--accent-dark);
-    text-decoration: none;
-    border-bottom: 1px solid var(--accent);
-    padding-bottom: 1px;
-    transition: opacity 0.15s;
-  }
+  .col-link a { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent-dark); text-decoration: none; border-bottom: 1px solid var(--accent); padding-bottom: 1px; transition: opacity 0.15s; }
   .col-link a:hover { opacity: 0.7; }
 
-  .empty-state {
-    padding: 64px 24px;
-    text-align: center;
-  }
+  .empty-state { padding: 64px 24px; text-align: center; }
+  .empty-icon { width: 40px; height: 40px; border-radius: 50%; background: var(--accent-light); border: 1px solid var(--accent); margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; }
+  .empty-icon::after { content: ''; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); opacity: 0.4; }
+  .empty-state p { font-size: 13px; color: var(--muted); line-height: 1.8; }
+  .empty-state p span { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); display: block; margin-top: 4px; }
 
-  .empty-icon {
-    width: 40px; height: 40px;
-    border-radius: 50%;
-    background: var(--accent-light);
-    border: 1px solid var(--accent);
-    margin: 0 auto 16px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .empty-icon::after {
-    content: '';
-    width: 12px; height: 12px;
-    border-radius: 50%;
-    background: var(--accent);
-    opacity: 0.4;
-  }
-
-  .empty-state p {
-    font-size: 13px;
-    color: var(--muted);
-    line-height: 1.8;
-  }
-
-  .empty-state p span {
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    color: var(--muted2);
-    display: block;
-    margin-top: 4px;
-  }
-
-  /* toast */
-  .toast {
-    position: fixed;
-    bottom: 32px;
-    right: 32px;
-    background: var(--text);
-    color: var(--surface);
-    border-radius: 8px;
-    padding: 11px 18px;
-    font-family: 'DM Mono', monospace;
-    font-size: 11px;
-    opacity: 0;
-    transform: translateY(8px);
-    transition: all 0.25s;
-    z-index: 100;
-  }
+  .toast { position: fixed; bottom: 32px; right: 32px; background: var(--text); color: var(--surface); border-radius: 8px; padding: 11px 18px; font-family: 'DM Mono', monospace; font-size: 11px; opacity: 0; transform: translateY(8px); transition: all 0.25s; z-index: 100; }
   .toast.show { opacity: 1; transform: translateY(0); }
-
   @media (max-width: 640px) {
     .summary-grid { grid-template-columns: 1fr; }
     .table-row { grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -431,7 +154,6 @@
 </head>
 <body>
 <div class="wrap">
-
   <header>
     <div class="logo-block">
       <div class="eyebrow">UGC Monitor</div>
@@ -446,18 +168,23 @@
   <div class="input-section">
     <label class="input-label">게시물 URL</label>
     <div class="url-row">
-      <input
-        class="url-input"
-        id="urlInput"
-        type="text"
-        placeholder="https://www.instagram.com/p/ABC123/"
-      />
-      <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
+      <input class="url-input" id="urlInput" type="text" placeholder="https://www.instagram.com/p/ABC123/" />
     </div>
-    <div class="input-hint">릴스 또는 피드 게시물 URL을 입력하세요. 댓글 유저의 프사·스토리·피드를 자동 분석합니다.</div>
-    <div class="progress-bar-wrap" id="progressWrap">
-      <div class="progress-bar" id="progressBar"></div>
+
+    <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(이 스타일과 비슷한 이미지를 찾아요)</span></label>
+    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+      <div class="upload-icon" id="uploadIcon">+</div>
+      <img class="upload-preview" id="uploadPreview" />
+      <div class="upload-text">
+        <div class="upload-title" id="uploadTitle">이미지를 클릭해서 업로드하세요</div>
+        <div class="upload-sub" id="uploadSub">PNG, JPG 지원 · 우리 프롬프트로 만든 샘플 이미지</div>
+      </div>
     </div>
+    <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" />
+
+    <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
+    <div class="input-hint">게시물 URL과 레퍼런스 이미지를 모두 입력해야 수집이 시작돼요.</div>
+    <div class="progress-bar-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
     <div class="progress-label" id="progressLabel"></div>
   </div>
 
@@ -491,83 +218,143 @@
     </div>
     <div class="results-table">
       <div class="table-row head">
-        <span>유저</span>
-        <span>감지 시각</span>
-        <span>유형</span>
-        <span>링크</span>
+        <span>유저</span><span>감지 시각</span><span>유형</span><span>링크</span>
       </div>
       <div id="resultsBody">
         <div class="empty-state">
           <div class="empty-icon"></div>
-          <p>게시물 URL을 입력하고 수집을 시작하세요.
+          <p>게시물 URL과 레퍼런스 이미지를 입력하고 수집을 시작하세요.
             <span>댓글 유저 → 프로필 스캔 → AI 판별 순으로 진행됩니다</span>
           </p>
         </div>
       </div>
     </div>
   </div>
-
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script>
   let allResults = [];
   let currentFilter = 'all';
+  let pollTimer = null;
+  let uploadedFile = null;
+
+  // ← Render 배포 후 실제 URL로 교체
   const API_BASE = 'https://your-api.onrender.com';
 
-  const DEMO_RESULTS = [
-    { username: 'min_ji_ai',    detected_at: '14:32', type: 'feed',    link: 'https://www.instagram.com/p/demo1/' },
-    { username: 'soo_prompt',   detected_at: '14:31', type: 'story',   link: null },
-    { username: 'hyun_vibes',   detected_at: '14:29', type: 'profile', link: null },
-    { username: 'ai_daily_kr',  detected_at: '14:28', type: 'feed',    link: 'https://www.instagram.com/p/demo2/' },
-    { username: 'jiyeon_art',   detected_at: '14:27', type: 'story',   link: null },
-    { username: 'pixel_yoona',  detected_at: '14:25', type: 'feed',    link: 'https://www.instagram.com/p/demo3/' },
-    { username: 'creativekr',   detected_at: '14:24', type: 'profile', link: null },
-  ];
+  // ── 이미지 업로드 ──────────────────────────────
+  function handleImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    uploadedFile = file;
 
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const preview = document.getElementById('uploadPreview');
+      const icon    = document.getElementById('uploadIcon');
+      const area    = document.getElementById('uploadArea');
+      preview.src = ev.target.result;
+      preview.classList.add('visible');
+      icon.classList.add('hidden');
+      area.classList.add('has-image');
+      document.getElementById('uploadTitle').textContent = file.name;
+      document.getElementById('uploadSub').textContent   = `${(file.size/1024).toFixed(0)}KB · 업로드 완료`;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  // ── 스캔 시작 ──────────────────────────────────
   async function startScan() {
     const url = document.getElementById('urlInput').value.trim();
     if (!url || !url.includes('instagram.com')) {
-      showToast('올바른 인스타그램 URL을 입력해주세요');
-      return;
+      showToast('올바른 인스타그램 URL을 입력해주세요'); return;
     }
+    if (!uploadedFile) {
+      showToast('레퍼런스 이미지를 업로드해주세요'); return;
+    }
+
     setRunning(true);
+
     try {
-      await simulateScan();
-      renderResults(DEMO_RESULTS);
+      const formData = new FormData();
+      formData.append('post_url', url);
+      formData.append('reference_image', uploadedFile);
+
+      const resp = await fetch(`${API_BASE}/scan`, { method: 'POST', body: formData });
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        showToast(err.error || '오류가 발생했습니다.');
+        setRunning(false); return;
+      }
+
+      // 폴링 시작
+      pollTimer = setInterval(pollResults, 3000);
+
     } catch (err) {
-      showToast('오류가 발생했습니다. 다시 시도해주세요.');
-      setRunning(false);
+      // API 미연결 시 데모 모드
+      console.warn('API 미연결 — 데모 모드 실행');
+      await runDemo();
     }
   }
 
-  async function simulateScan() {
+  // ── 결과 폴링 ──────────────────────────────────
+  async function pollResults() {
+    try {
+      const resp = await fetch(`${API_BASE}/results`);
+      const data = await resp.json();
+
+      setProgress(data.progress || 0, data.step || '');
+
+      if (data.status === 'done') {
+        clearInterval(pollTimer);
+        renderResults(data.results || [], data.stats || {});
+      } else if (data.status === 'error') {
+        clearInterval(pollTimer);
+        showToast('스캔 중 오류가 발생했습니다.');
+        setRunning(false);
+      }
+    } catch {}
+  }
+
+  // ── 데모 모드 ──────────────────────────────────
+  async function runDemo() {
     const steps = [
       [15, '댓글 유저 수집 중...'],
       [35, 'Apify 프로필 스캔 중...'],
       [60, '변화 감지 필터링...'],
-      [80, 'Gemini 이미지 분석 중...'],
+      [80, 'Gemini 이미지 판별 중...'],
       [100, '완료!'],
     ];
     for (const [pct, label] of steps) {
       setProgress(pct, label);
-      await sleep(700);
+      await sleep(800);
     }
+    const demo = [
+      { username: 'min_ji_ai',   detected_at: '14:32', type: 'feed',    link: 'https://www.instagram.com/p/demo1/' },
+      { username: 'soo_prompt',  detected_at: '14:31', type: 'story',   link: null },
+      { username: 'hyun_vibes',  detected_at: '14:29', type: 'profile', link: null },
+      { username: 'ai_daily_kr', detected_at: '14:28', type: 'feed',    link: 'https://www.instagram.com/p/demo2/' },
+      { username: 'jiyeon_art',  detected_at: '14:27', type: 'story',   link: null },
+    ];
+    const stats = {
+      feed:    demo.filter(r=>r.type==='feed').length,
+      story:   demo.filter(r=>r.type==='story').length,
+      profile: demo.filter(r=>r.type==='profile').length,
+    };
+    renderResults(demo, stats);
   }
 
-  function renderResults(results) {
+  // ── 결과 렌더링 ────────────────────────────────
+  function renderResults(results, stats) {
     allResults = results;
     setRunning(false);
-    const feed    = results.filter(r => r.type === 'feed').length;
-    const story   = results.filter(r => r.type === 'story').length;
-    const profile = results.filter(r => r.type === 'profile').length;
-    animateCount('countFeed', feed);
-    animateCount('countStory', story);
-    animateCount('countProfile', profile);
-    document.getElementById('cardFeed').className    = feed    ? 'summary-card active-feed'    : 'summary-card';
-    document.getElementById('cardStory').className   = story   ? 'summary-card active-story'   : 'summary-card';
-    document.getElementById('cardProfile').className = profile ? 'summary-card active-profile' : 'summary-card';
+    animateCount('countFeed',    stats.feed    || 0);
+    animateCount('countStory',   stats.story   || 0);
+    animateCount('countProfile', stats.profile || 0);
+    document.getElementById('cardFeed').className    = stats.feed    ? 'summary-card active-feed'    : 'summary-card';
+    document.getElementById('cardStory').className   = stats.story   ? 'summary-card active-story'   : 'summary-card';
+    document.getElementById('cardProfile').className = stats.profile ? 'summary-card active-profile' : 'summary-card';
     applyFilter(currentFilter);
     document.getElementById('statusDot').className = 'dot ready';
     document.getElementById('statusText').textContent = `마지막 스캔: 방금 전 · 총 ${results.length}건`;
@@ -589,17 +376,9 @@
           <span class="username">@${r.username}</span>
         </div>
         <div class="col-detected">오늘 ${r.detected_at}</div>
-        <div>
-          <span class="type-badge ${r.type}">
-            <span class="badge-dot"></span>
-            ${{ feed: '피드', story: '스토리', profile: '프사변경' }[r.type]}
-          </span>
-        </div>
-        <div class="col-link">
-          ${r.link ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>` : '<span style="color:var(--muted2);font-size:11px;font-family:\'DM Mono\',monospace">—</span>'}
-        </div>
-      </div>
-    `).join('');
+        <div><span class="type-badge ${r.type}"><span class="badge-dot"></span>${{feed:'피드',story:'스토리',profile:'프사변경'}[r.type]}</span></div>
+        <div class="col-link">${r.link ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>` : '<span style="color:var(--muted2);font-size:11px;font-family:\'DM Mono\',monospace">—</span>'}</div>
+      </div>`).join('');
   }
 
   function filterResults(type, el) {
@@ -626,13 +405,9 @@
 
   function animateCount(id, target) {
     const el = document.getElementById(id);
-    let current = 0;
+    let cur = 0;
     const step = Math.max(1, Math.floor(target / 20));
-    const timer = setInterval(() => {
-      current = Math.min(current + step, target);
-      el.textContent = current;
-      if (current >= target) clearInterval(timer);
-    }, 40);
+    const t = setInterval(() => { cur = Math.min(cur+step, target); el.textContent = cur; if (cur >= target) clearInterval(t); }, 40);
   }
 
   function showToast(msg) {
