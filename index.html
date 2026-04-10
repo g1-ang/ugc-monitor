@@ -264,6 +264,13 @@
   }
 
   // ── 스캔 시작 ──────────────────────────────────
+  async function wakeupServer() {
+    try {
+      const resp = await fetch(`${API_BASE}/health`, { signal: AbortSignal.timeout(12000) });
+      return resp.ok;
+    } catch { return false; }
+  }
+
   async function startScan() {
     const url = document.getElementById('urlInput').value.trim();
     if (!url || !url.includes('instagram.com')) {
@@ -274,6 +281,20 @@
     }
 
     setRunning(true);
+
+    // Render 슬립 해결
+    setProgress(2, '서버 연결 중... (최초 실행 시 30초 소요)');
+    let serverReady = false;
+    for (let i = 0; i < 7; i++) {
+      serverReady = await wakeupServer();
+      if (serverReady) break;
+      setProgress(2 + i*3, `서버 시작 중... ${(i+1)*5}초`);
+      await sleep(5000);
+    }
+    if (!serverReady) {
+      showToast('서버 연결 실패 — 잠시 후 다시 시도해주세요');
+      setRunning(false); return;
+    }
 
     try {
       const formData = new FormData();
