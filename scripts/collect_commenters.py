@@ -43,7 +43,7 @@ def scrape_comments(post_urls: list[str]) -> list[dict]:
 
     resp = requests.post(
         f"{APIFY_BASE}/acts/{ACTOR_COMMENTS}/runs?token={APIFY_API_TOKEN}",
-        json={"directUrls": post_urls, "resultsLimit": 500},
+        json={"directUrls": post_urls, "resultsLimit": 500, "_triggeredBy": "지원", "_project": "프롬프트 오가닉 모니터링"},
         timeout=30,
     )
     resp.raise_for_status()
