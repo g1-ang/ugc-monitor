@@ -172,19 +172,40 @@ def detect_and_update(sheet, users: list[dict], profiles: list[dict], headers_ma
         profile = profile_map.get(username.lower())
         if not profile:
             # 프로필 못 가져온 경우 — 비공개 또는 삭제 계정
-            updates.append({"range": f"D{row_idx}", "values": [[now]]})  # last_checked
+            updates.append({"range": f"'{SHEET_TAB_NAME}'!D{row_idx}", "values": [[now]]})  # last_checked
             continue
 
         # 데이터 추출
         curr_profile_url = profile.get("profilePicUrl") or profile.get("profilePicUrlHD") or ""
         has_story        = profile.get("hasPublicStory", False)
+        # 스토리 이미지 URL (가능한 필드들에서 추출)
+        stories          = profile.get("stories") or profile.get("latestStories") or []
+        story_image_url  = ""
+        if stories and isinstance(stories, list):
+            s0 = stories[0]
+            story_image_url = s0.get("displayUrl") or s0.get("imageUrl") or s0.get("url", "")
+
         latest_posts     = profile.get("latestPosts") or profile.get("posts") or []
-        latest_feed_url  = latest_posts[0].get("url") or latest_posts[0].get("displayUrl", "") if latest_posts else ""
-        is_private       = profile.get("isPrivate", False)
+        # 피드 최대 5개: 이미지 URL 배열 + (post_url, image_url) 아이템 배열
+        latest_feed_urls  = []  # 이미지 URL 배열 (판별용)
+        latest_feed_items = []  # [{post_url, image_url}] (출력·저장용)
+        for p in latest_posts[:5]:
+            img_url = p.get("displayUrl") or p.get("imageUrl") or ""
+            sc      = p.get("shortCode") or p.get("shortcode") or ""
+            post_url = f"https://www.instagram.com/p/{sc}/" if sc else p.get("url", "")
+            if img_url:
+                latest_feed_urls.append(img_url)
+            if img_url or post_url:
+                latest_feed_items.append({"post_url": post_url, "image_url": img_url})
+
+        # 시트에는 최신 1개 게시물 URL (표시용)
+        latest_feed_url = latest_feed_items[0]["post_url"] if latest_feed_items else ""
+        is_private      = profile.get("isPrivate", False)
 
         # 변화 감지
         profile_changed = bool(curr_profile_url and prev_url and curr_profile_url != prev_url)
-        has_activity    = has_story or bool(latest_feed_url) or profile_changed
+        # 프사 있으면 무조건 판별 후보에 포함 (첫 스캔이어도 우리 스타일인지 확인)
+        has_activity    = has_story or bool(latest_feed_url) or bool(curr_profile_url)
 
         # Sheets 업데이트 준비 (행 전체를 한번에)
         # 컬럼 위치 동적으로 찾기
@@ -213,16 +234,19 @@ def detect_and_update(sheet, users: list[dict], profiles: list[dict], headers_ma
         for col_name, value in cell_updates.items():
             cl = col_letter(col_name)
             if cl:
-                updates.append({"range": f"{cl}{row_idx}", "values": [[value]]})
+                updates.append({"range": f"'{SHEET_TAB_NAME}'!{cl}{row_idx}", "values": [[value]]})
 
         if has_activity and not is_private:
             changed_users.append({
-                "username":        username,
-                "profile_changed": profile_changed,
-                "has_story":       has_story,
-                "has_feed":        bool(latest_feed_url),
-                "profile_url":     curr_profile_url,
-                "latest_feed_url": latest_feed_url,
+                "username":          username,
+                "profile_changed":   profile_changed,
+                "has_story":         has_story,
+                "has_feed":          bool(latest_feed_items),
+                "profile_url":       curr_profile_url,     # 프사 이미지 URL
+                "story_image_url":   story_image_url,      # 스토리 이미지 URL
+                "latest_feed_urls":  latest_feed_urls,     # 피드 이미지 URL 배열 (판별용)
+                "latest_feed_items": latest_feed_items,    # 피드 게시물 메타 (post_url+image_url)
+                "latest_feed_url":   latest_feed_url,      # 첫 게시물 페이지 URL (시트 표시용)
             })
 
     # Sheets 배치 업데이트 (한 번에 전송)

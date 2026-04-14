@@ -166,10 +166,20 @@
   </header>
 
   <div class="input-section">
-    <label class="input-label">게시물 URL</label>
+    <label class="input-label">게시물 URL <span style="color:var(--muted2);font-weight:300">(선택 · 메타 기록용)</span></label>
     <div class="url-row">
       <input class="url-input" id="urlInput" type="text" placeholder="https://www.instagram.com/p/ABC123/" />
     </div>
+
+    <label class="input-label">댓글 파일 <span style="color:var(--muted2);font-weight:300">(xlsx 또는 csv · '아이디' 컬럼 필요)</span></label>
+    <div class="upload-area" id="commentUploadArea" onclick="document.getElementById('commentInput').click()">
+      <div class="upload-icon" id="commentUploadIcon">📄</div>
+      <div class="upload-text">
+        <div class="upload-title" id="commentUploadTitle">댓글 추출 파일을 업로드하세요</div>
+        <div class="upload-sub" id="commentUploadSub">.xlsx, .csv · 인스타 댓글 추출기 엑셀 파일</div>
+      </div>
+    </div>
+    <input type="file" id="commentInput" accept=".xlsx,.csv" onchange="handleCommentFileUpload(event)" />
 
     <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(이 스타일과 비슷한 이미지를 찾아요)</span></label>
     <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
@@ -183,7 +193,7 @@
     <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" />
 
     <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
-    <div class="input-hint">게시물 URL과 레퍼런스 이미지를 모두 입력해야 수집이 시작돼요.</div>
+    <div class="input-hint">댓글 파일과 레퍼런스 이미지를 모두 업로드해야 수집이 시작돼요.</div>
     <div class="progress-bar-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
     <div class="progress-label" id="progressLabel"></div>
   </div>
@@ -223,7 +233,7 @@
       <div id="resultsBody">
         <div class="empty-state">
           <div class="empty-icon"></div>
-          <p>게시물 URL과 레퍼런스 이미지를 입력하고 수집을 시작하세요.
+          <p>댓글 파일과 레퍼런스 이미지를 업로드하고 수집을 시작하세요.
             <span>댓글 유저 → 프로필 스캔 → AI 판별 순으로 진행됩니다</span>
           </p>
         </div>
@@ -237,7 +247,18 @@
   let allResults = [];
   let currentFilter = 'all';
   let pollTimer = null;
-  let uploadedFile = null;
+  let uploadedFile = null;      // 레퍼런스 이미지
+  let commentFile = null;       // 댓글 파일 (xlsx/csv)
+
+  function handleCommentFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    commentFile = file;
+    const area  = document.getElementById('commentUploadArea');
+    area.classList.add('has-image');
+    document.getElementById('commentUploadTitle').textContent = file.name;
+    document.getElementById('commentUploadSub').textContent   = `${(file.size/1024).toFixed(0)}KB · 업로드 완료`;
+  }
 
   // ← Render 배포 후 실제 URL로 교체
   const API_BASE = 'https://ugc-monitor-api.onrender.com';
@@ -273,8 +294,8 @@
 
   async function startScan() {
     const url = document.getElementById('urlInput').value.trim();
-    if (!url || !url.includes('instagram.com')) {
-      showToast('올바른 인스타그램 URL을 입력해주세요'); return;
+    if (!commentFile) {
+      showToast('댓글 파일(xlsx/csv)을 업로드해주세요'); return;
     }
     if (!uploadedFile) {
       showToast('레퍼런스 이미지를 업로드해주세요'); return;
@@ -299,6 +320,7 @@
     try {
       const formData = new FormData();
       formData.append('post_url', url);
+      formData.append('comment_file', commentFile);
       formData.append('reference_image', uploadedFile);
 
       const resp = await fetch(`${API_BASE}/scan`, { method: 'POST', body: formData });

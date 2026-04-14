@@ -1,101 +1,119 @@
 """
-analyze_ugc.py  [Phase 3 — Gemini Vision 판별]
+analyze_ugc.py  [Phase 3 — NAVER Open Models (Qwen2.5-VL) 판별]
 ────────────────────────────────────────────────────
-phase3_candidates.json의 유저 이미지를 Gemini Vision으로 분석해
-우리 AI 스타일인지 판별하고 Google Sheets를 업데이트합니다.
+phase3_candidates.json의 유저 이미지를 레퍼런스 이미지와 비교해
+스타일 유사도를 Qwen2.5-VL-32B-Instruct로 판별하고
+Google Sheets를 업데이트합니다.
 
 실행 방법:
-  python analyze_ugc.py                        # phase3_candidates.json 사용
-  python analyze_ugc.py --data candidates.json # 다른 파일 지정
+  python analyze_ugc.py --reference reference.jpg
+  python analyze_ugc.py --reference ref.png --data candidates.json
 """
 
-import os, sys, json, time, argparse, requests, base64
+import os, sys, json, time, argparse, requests, base64, mimetypes, io
 from datetime import datetime, timezone
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from threading import Lock
 from dotenv import load_dotenv
+from PIL import Image
 import gspread
 from google.oauth2.service_account import Credentials
 
+CONCURRENT_USERS = 5  # 동시에 처리할 유저 수
+
 load_dotenv()
 
-GEMINI_API_KEY     = os.getenv("GEMINI_API_KEY")
+NAVER_API_URL      = os.getenv("NAVER_API_URL", "").rstrip("/")
+NAVER_API_KEY      = os.getenv("NAVER_API_KEY")
 SPREADSHEET_ID     = os.getenv("SPREADSHEET_ID")
 GOOGLE_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS_PATH", "config/google_credentials.json")
 SHEET_TAB_NAME     = "ugc_users"
+MODEL_NAME         = "Qwen2.5-VL-32B-Instruct"
 
-GEMINI_URL = (
-    "https://generativelanguage.googleapis.com/v1beta/models/"
-    "gemini-1.5-flash:generateContent"
-)
+PROMPT = """[이미지 1]은 특정 AI 프롬프트로 만든 레퍼런스 결과물입니다.
+[이미지 2]는 유저가 올린 판별 대상 게시물입니다.
 
-# ── pitapat_prompt 스타일 판별 프롬프트 ──────────
-STYLE_PROMPT = """이 이미지를 분석해주세요.
+배경: 이 프롬프트는 여러 유저가 자기 얼굴로 동일하게 생성하는 구조입니다.
+동일 프롬프트로 만든 이미지는 **얼굴만 다르고 장면·구도·무드가 거의 동일**합니다.
+※ 이미지 2는 프로필 사진처럼 저해상도·저화질일 수도 있습니다. 그래도 핵심 구성이 같으면 인정합니다.
 
-판별 기준:
-- AI로 생성된 인물 이미지인가? (실제 사진이 아닌 AI 생성 이미지)
-- 동양인 여성 캐릭터 또는 인물이 주인공인가?
-- 사실적이지만 약간 이상적으로 보정된 피부, 눈, 얼굴 비율인가?
-- 셀카 스타일 또는 포트레이트 구도인가?
-- 전반적으로 한국 뷰티/패션 인스타그램 감성인가?
+얼굴(인물 identity)은 무시하고, 아래 6가지 요소 중 [이미지 1]과 [이미지 2]에서 얼마나 유사한지 판단:
+1. 배경·장소 (같은 씬/공간 유형)
+2. 의상·소품 (같은 착장이나 핵심 소품)
+3. 카메라 구도/앵글 (셀피·하이앵글·거울샷 등)
+4. 조명·노출 (광원 방향, 밝기, 분위기)
+5. 색감·톤 (팔레트, 화이트밸런스)
+6. 전체적 무드/스타일
 
-위 기준에 해당하면 YES, 아니면 NO로만 답하세요.
+판별 규칙:
+- 얼굴이 달라도 상관없음
+- 위 6가지 중 **핵심 3가지 이상**이 명확히 유사하면 YES
+  (예: 배경+구도+소품이 같으면 조명/색감이 조금 달라도 YES)
+- 저해상도 이미지여도 큰 구성이 같아 보이면 YES
+- 단순히 "AI 이미지"거나 "여성 셀카"라는 이유만으로는 NO
+- 배경과 구도 둘 다 완전히 다르면 NO
+
 반드시 YES 또는 NO 한 단어만 답하세요."""
 
 
-# ── 1. 이미지 URL → base64 변환 ────────────────
-def url_to_base64(image_url: str) -> tuple[str, str]:
-    """이미지 URL을 base64로 변환. (data, mime_type) 반환"""
-    try:
-        resp = requests.get(image_url, timeout=15, headers={
-            "User-Agent": "Mozilla/5.0"
-        })
-        resp.raise_for_status()
-        mime_type = resp.headers.get("Content-Type", "image/jpeg").split(";")[0]
-        data = base64.b64encode(resp.content).decode("utf-8")
-        return data, mime_type
-    except Exception as e:
-        print(f"    ⚠️  이미지 다운로드 실패: {e}")
-        return None, None
+# ── 1. 이미지 로딩 ─────────────────────────────
+def file_to_data_uri(path: str, max_side: int = 1024) -> str:
+    """로컬 이미지 파일 → data URI (리사이즈 후 base64)"""
+    with open(path, "rb") as f:
+        raw = f.read()
+    img = Image.open(io.BytesIO(raw))
+    if img.mode not in ("RGB", "L"):
+        img = img.convert("RGB")
+    img.thumbnail((max_side, max_side), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=85)
+    b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+    return f"data:image/jpeg;base64,{b64}"
 
 
-# ── 2. Gemini Vision 호출 ──────────────────────
-def analyze_image(image_url: str) -> bool | None:
-    """이미지가 AI 스타일인지 판별. True/False/None(판별불가) 반환"""
-    if not image_url:
-        return None
-
-    img_data, mime_type = url_to_base64(image_url)
-    if not img_data:
-        return None
-
+# ── 2. NAVER Open Models 호출 ─────────────────
+def call_model(reference_data_uri: str, target_url: str, max_retries: int = 3) -> bool | None:
+    """레퍼런스 이미지(data URI)와 타겟 이미지(URL)를 비교해 YES/NO 판별"""
     payload = {
-        "contents": [{
-            "parts": [
-                {"text": STYLE_PROMPT},
-                {"inline_data": {"mime_type": mime_type, "data": img_data}}
-            ]
+        "model": MODEL_NAME,
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": PROMPT},
+                {"type": "text", "text": "[이미지 1] 레퍼런스:"},
+                {"type": "image_url", "image_url": {"url": reference_data_uri}},
+                {"type": "text", "text": "[이미지 2] 판별 대상:"},
+                {"type": "image_url", "image_url": {"url": target_url}},
+            ],
         }],
-        "generationConfig": {
-            "temperature": 0.1,
-            "maxOutputTokens": 10,
-        }
+        "temperature": 0.1,
+        "max_tokens": 10,
     }
+    headers = {
+        "Authorization": f"Bearer {NAVER_API_KEY}",
+        "Content-Type": "application/json",
+    }
+    endpoint = f"{NAVER_API_URL}/chat/completions"
 
-    try:
-        resp = requests.post(
-            f"{GEMINI_URL}?key={GEMINI_API_KEY}",
-            json=payload,
-            timeout=30,
-        )
-        resp.raise_for_status()
-        result = resp.json()
-        answer = result["candidates"][0]["content"]["parts"][0]["text"].strip().upper()
-        return "YES" in answer
-    except Exception as e:
-        print(f"    ⚠️  Gemini 호출 실패: {e}")
-        return None
+    for attempt in range(max_retries):
+        try:
+            resp = requests.post(endpoint, json=payload, headers=headers, timeout=90)
+            if resp.status_code in (429, 503):
+                wait = 2 ** (attempt + 2)
+                print(f" [{resp.status_code} 재시도 {wait}s]", end="", flush=True)
+                time.sleep(wait)
+                continue
+            resp.raise_for_status()
+            answer = resp.json()["choices"][0]["message"]["content"].strip().upper()
+            return "YES" in answer
+        except Exception as e:
+            print(f"    ⚠️  호출 실패: {e}")
+            return None
+    print(f"    ⚠️  재시도 초과")
+    return None
 
 
-# ── 3. Google Sheets 업데이트 ──────────────────
+# ── 3. Google Sheets 업데이트 ─────────────────
 def get_sheet():
     creds = Credentials.from_service_account_file(
         GOOGLE_CREDENTIALS,
@@ -105,39 +123,38 @@ def get_sheet():
     return gspread.authorize(creds).open_by_key(SPREADSHEET_ID).worksheet(SHEET_TAB_NAME)
 
 
+def col_letter(headers: list, name: str) -> str | None:
+    if name not in headers:
+        return None
+    idx = headers.index(name)
+    result = ""
+    n = idx
+    while True:
+        result = chr(65 + n % 26) + result
+        n = n // 26 - 1
+        if n < 0:
+            break
+    return result
+
+
 def update_sheet(sheet, username: str, ugc_type: str, is_detected: bool):
-    """해당 유저 행에 UGC 판별 결과 업데이트"""
     all_values = sheet.get_all_values()
     headers    = all_values[0]
 
-    # 컬럼 인덱스 찾기
-    def col_letter(name):
-        if name not in headers: return None
-        idx = headers.index(name)
-        result = ""
-        n = idx
-        while True:
-            result = chr(65 + n % 26) + result
-            n = n // 26 - 1
-            if n < 0: break
-        return result
-
-    # username 행 찾기
     for i, row in enumerate(all_values[1:], start=2):
         if row and row[0].strip().lower() == username.lower():
             now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
             updates = []
-
-            cl_detected  = col_letter("is_ugc_detected")
-            cl_type      = col_letter("ugc_type")
-            cl_detected_at = col_letter("ugc_detected_at")
+            cl_detected    = col_letter(headers, "is_ugc_detected")
+            cl_type        = col_letter(headers, "ugc_type")
+            cl_detected_at = col_letter(headers, "ugc_detected_at")
 
             if cl_detected:
-                updates.append({"range": f"{cl_detected}{i}",   "values": [["TRUE" if is_detected else "FALSE"]]})
+                updates.append({"range": f"'{SHEET_TAB_NAME}'!{cl_detected}{i}", "values": [["TRUE" if is_detected else "FALSE"]]})
             if cl_type and is_detected:
-                updates.append({"range": f"{cl_type}{i}",       "values": [[ugc_type]]})
+                updates.append({"range": f"'{SHEET_TAB_NAME}'!{cl_type}{i}", "values": [[ugc_type]]})
             if cl_detected_at and is_detected:
-                updates.append({"range": f"{cl_detected_at}{i}", "values": [[now]]})
+                updates.append({"range": f"'{SHEET_TAB_NAME}'!{cl_detected_at}{i}", "values": [[now]]})
 
             if updates:
                 sheet.spreadsheet.values_batch_update({
@@ -152,100 +169,114 @@ def update_sheet(sheet, username: str, ugc_type: str, is_detected: bool):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, default="phase3_candidates.json")
+    parser.add_argument("--reference", type=str, required=True,
+                        help="레퍼런스 이미지 파일 경로")
     args = parser.parse_args()
 
     print("=" * 55)
-    print("  UGC Monitor — Phase 3: Gemini Vision 판별")
+    print(f"  UGC Monitor — Phase 3: {MODEL_NAME} 판별")
     print("=" * 55)
 
-    # 환경변수 체크
-    missing = [k for k, v in [("GEMINI_API_KEY", GEMINI_API_KEY),
-                                ("SPREADSHEET_ID", SPREADSHEET_ID)] if not v]
+    missing = [k for k, v in [
+        ("NAVER_API_URL", NAVER_API_URL),
+        ("NAVER_API_KEY", NAVER_API_KEY),
+        ("SPREADSHEET_ID", SPREADSHEET_ID),
+    ] if not v]
     if missing:
         print(f"❌ .env 파일에 없는 값: {', '.join(missing)}")
         sys.exit(1)
 
-    if not os.path.exists(args.data):
-        print(f"❌ 파일 없음: {args.data}")
-        print("   Phase 2를 먼저 실행해주세요: python scripts/scan_profiles.py")
+    if not os.path.exists(args.reference):
+        print(f"❌ 레퍼런스 이미지 없음: {args.reference}")
         sys.exit(1)
+
+    if not os.path.exists(args.data):
+        print(f"❌ 후보 파일 없음: {args.data}")
+        sys.exit(1)
+
+    # 레퍼런스 로드 (data URI)
+    ref_uri = file_to_data_uri(args.reference)
+    print(f"✅ 레퍼런스 로드: {args.reference} ({len(ref_uri)//1024} KB base64)")
 
     with open(args.data, encoding="utf-8") as f:
         candidates = json.load(f)
 
     print(f"\n판별 대상: {len(candidates)}명")
-    print(f"{'─'*55}")
+    print("─" * 55)
 
     sheet = get_sheet()
 
     confirmed_ugc = []
     results_log   = []
+    sheet_lock    = Lock()
+    progress      = {"done": 0}
 
-    for i, user in enumerate(candidates, 1):
+    def process_user(user):
         username = user.get("username", "")
-        print(f"\n[{i}/{len(candidates)}] @{username}")
-
-        # 판별할 이미지 목록 (우선순위: 피드 > 프사 > 스토리)
         images_to_check = []
-        if user.get("has_feed") and user.get("latest_feed_url"):
-            images_to_check.append(("feed", user["latest_feed_url"]))
-        if user.get("profile_changed") and user.get("profile_url"):
-            images_to_check.append(("profile", user["profile_url"]))
-        if user.get("has_story"):
-            # 스토리는 URL이 없는 경우가 많아 프사로 대체 판별
-            if not images_to_check and user.get("profile_url"):
-                images_to_check.append(("story", user["profile_url"]))
+        if user.get("profile_url"):
+            images_to_check.append(("profile", user["profile_url"], ""))
+        if user.get("has_story") and user.get("story_image_url"):
+            images_to_check.append(("story", user["story_image_url"], ""))
+        feed_items = user.get("latest_feed_items") or []
+        feed_urls  = user.get("latest_feed_urls") or []
+        if feed_items:
+            for item in feed_items:
+                img = item.get("image_url")
+                if img:
+                    images_to_check.append(("feed", img, item.get("post_url", "")))
+        elif feed_urls:
+            for img in feed_urls:
+                images_to_check.append(("feed", img, ""))
 
         if not images_to_check:
-            print(f"  → 판별할 이미지 없음, 스킵")
-            continue
+            return {"username": username, "is_ugc": False, "ugc_type": "none", "matched_post": "", "skipped": True}
 
-        is_ugc     = False
-        ugc_type   = "none"
+        is_ugc       = False
+        ugc_type     = "none"
+        matched_post = ""
 
-        for img_type, img_url in images_to_check:
-            print(f"  → {img_type} 이미지 분석 중...", end="", flush=True)
-            result = analyze_image(img_url)
-
+        for img_type, img_url, post_url in images_to_check:
+            result = call_model(ref_uri, img_url)
             if result is True:
-                print(f" ✅ AI 스타일 감지!")
-                is_ugc   = True
-                ugc_type = img_type
+                is_ugc, ugc_type, matched_post = True, img_type, post_url
                 break
-            elif result is False:
-                print(f" ❌ 해당 없음")
+
+        with sheet_lock:
+            update_sheet(sheet, username, ugc_type, is_ugc)
+
+        return {"username": username, "is_ugc": is_ugc, "ugc_type": ugc_type,
+                "matched_post": matched_post, "skipped": False}
+
+    total = len(candidates)
+    with ThreadPoolExecutor(max_workers=CONCURRENT_USERS) as ex:
+        futures = {ex.submit(process_user, u): u for u in candidates}
+        for fut in as_completed(futures):
+            r = fut.result()
+            progress["done"] += 1
+            uname = r["username"]
+            if r.get("skipped"):
+                status = "→ 스킵"
+            elif r["is_ugc"]:
+                status = f"✅ {r['ugc_type']} 일치"
             else:
-                print(f" ? 판별 불가")
+                status = "❌ 해당 없음"
+            print(f"[{progress['done']}/{total}] @{uname} {status}")
 
-            # API 호출 간격
-            time.sleep(1)
+            if r["is_ugc"]:
+                confirmed_ugc.append({
+                    "username": uname,
+                    "ugc_type": r["ugc_type"],
+                    "feed_url": r["matched_post"] or "",
+                })
+            results_log.append({"username": uname, "is_ugc": r["is_ugc"], "ugc_type": r["ugc_type"]})
 
-        # Sheets 업데이트
-        update_sheet(sheet, username, ugc_type, is_ugc)
-
-        if is_ugc:
-            confirmed_ugc.append({
-                "username": username,
-                "ugc_type": ugc_type,
-                "feed_url": user.get("latest_feed_url", ""),
-            })
-
-        # 결과 로그
-        results_log.append({
-            "username": username,
-            "is_ugc":   is_ugc,
-            "ugc_type": ugc_type,
-        })
-
-        time.sleep(0.5)
-
-    # ── 최종 결과 ───────────────────────────────
     print(f"\n{'='*55}")
-    print(f"  Phase 3 완료 — Gemini Vision 판별 결과")
+    print(f"  Phase 3 완료 — 판별 결과")
     print(f"{'='*55}")
     print(f"  판별 완료: {len(results_log)}명")
     print(f"  UGC 확인:  {len(confirmed_ugc)}명")
-    print(f"{'─'*55}")
+    print("─" * 55)
 
     if confirmed_ugc:
         print(f"\n  ✅ 확인된 UGC 유저:")
@@ -253,11 +284,10 @@ def main():
             type_label = {"feed": "피드", "story": "스토리", "profile": "프사변경"}.get(u["ugc_type"], u["ugc_type"])
             print(f"     · @{u['username']} → {type_label}")
             if u.get("feed_url"):
-                print(f"       {u['feed_url']}")
+                print(f"       {u['feed_url'][:80]}...")
     else:
         print(f"\n  이번 스캔에서 UGC가 확인되지 않았습니다.")
 
-    # 결과 저장
     with open("phase3_results.json", "w", encoding="utf-8") as f:
         json.dump({"confirmed_ugc": confirmed_ugc, "all_results": results_log}, f,
                   ensure_ascii=False, indent=2)
