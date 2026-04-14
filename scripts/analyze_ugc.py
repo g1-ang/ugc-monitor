@@ -91,10 +91,42 @@ def file_to_data_uri(path: str, max_side: int = 1024) -> str:
     return f"data:image/jpeg;base64,{b64}"
 
 
+def video_url_to_data_uri(video_url: str) -> str | None:
+    """비디오 URL → 첫 프레임 → data URI. 음원 추가로 mp4로 저장된 스토리 처리용"""
+    try:
+        import imageio.v3 as iio
+        frame = iio.imread(video_url, index=0, plugin="pyav")
+        img = Image.fromarray(frame)
+        if img.mode not in ("RGB", "L"):
+            img = img.convert("RGB")
+        img.thumbnail((1024, 1024), Image.LANCZOS)
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=85)
+        return "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+    except Exception as e:
+        print(f"    ⚠️  비디오 프레임 추출 실패: {str(e)[:80]}")
+        return None
+
+
+def target_to_qwen_url(url: str) -> str | None:
+    """타겟 URL이 이미지면 그대로, 비디오(.mp4)면 첫 프레임 data URI"""
+    if not url:
+        return None
+    lower = url.lower().split("?")[0]
+    if lower.endswith((".mp4", ".mov", ".webm")):
+        data_uri = video_url_to_data_uri(url)
+        return data_uri  # None이면 skip
+    return url
+
+
 # ── 2. NAVER Open Models 호출 ─────────────────
 def call_model(reference_data_uri: str, target_url: str, img_type: str = "feed", max_retries: int = 3) -> bool | None:
     """레퍼런스(data URI) vs 타겟(URL) 비교. img_type='profile'이면 저해상도 전용 프롬프트 사용"""
     prompt = PROMPT_PROFILE if img_type in ("profile", "story") else PROMPT_FEED
+    # 비디오면 첫 프레임 추출
+    target = target_to_qwen_url(target_url)
+    if not target:
+        return None
     payload = {
         "model": MODEL_NAME,
         "messages": [{
@@ -104,7 +136,7 @@ def call_model(reference_data_uri: str, target_url: str, img_type: str = "feed",
                 {"type": "text", "text": "[이미지 1] 레퍼런스:"},
                 {"type": "image_url", "image_url": {"url": reference_data_uri}},
                 {"type": "text", "text": "[이미지 2] 판별 대상:"},
-                {"type": "image_url", "image_url": {"url": target_url}},
+                {"type": "image_url", "image_url": {"url": target}},
             ],
         }],
         "temperature": 0.1,

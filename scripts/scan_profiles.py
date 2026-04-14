@@ -189,11 +189,11 @@ def scrape_stories(usernames: list[str]) -> dict[str, list[str]]:
                     stories = it.get("stories") or []
                     if not stories or not uname:
                         continue
-                    # 이미지 스토리 URL 배열 (최대 10장)
+                    # 이미지 + 비디오(썸네일용) 모두 포함, 최대 10장
                     urls = []
                     for s in stories[:10]:
                         url = s.get("mediaUrl")
-                        if url and s.get("mediaType") == "image":
+                        if url:
                             urls.append(url)
                     if urls:
                         story_map[uname] = urls
