@@ -6,3 +6,8 @@ __pycache__/
 phase3_candidates.json
 phase3_results.json
 ugc-monitor-api/
+reference*.jpg
+reference*.png
+*.xlsx
+*.csv
+*.pdf
