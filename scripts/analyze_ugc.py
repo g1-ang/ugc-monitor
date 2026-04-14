@@ -94,7 +94,7 @@ def file_to_data_uri(path: str, max_side: int = 1024) -> str:
 # ── 2. NAVER Open Models 호출 ─────────────────
 def call_model(reference_data_uri: str, target_url: str, img_type: str = "feed", max_retries: int = 3) -> bool | None:
     """레퍼런스(data URI) vs 타겟(URL) 비교. img_type='profile'이면 저해상도 전용 프롬프트 사용"""
-    prompt = PROMPT_PROFILE if img_type == "profile" else PROMPT_FEED
+    prompt = PROMPT_PROFILE if img_type in ("profile", "story") else PROMPT_FEED
     payload = {
         "model": MODEL_NAME,
         "messages": [{
@@ -237,8 +237,11 @@ def main():
         images_to_check = []
         if user.get("profile_url"):
             images_to_check.append(("profile", user["profile_url"], ""))
-        if user.get("has_story") and user.get("story_image_url"):
-            images_to_check.append(("story", user["story_image_url"], ""))
+        # 스토리 이미지 배열 (최대 10장) 순차 판별
+        story_urls = user.get("story_image_urls") or ([user["story_image_url"]] if user.get("story_image_url") else [])
+        if user.get("has_story"):
+            for s_url in story_urls:
+                images_to_check.append(("story", s_url, ""))
         feed_items = user.get("latest_feed_items") or []
         feed_urls  = user.get("latest_feed_urls") or []
         if feed_items:

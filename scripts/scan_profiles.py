@@ -23,6 +23,7 @@ SPREADSHEET_ID     = os.getenv("SPREADSHEET_ID")
 GOOGLE_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS_PATH", "config/google_credentials.json")
 SHEET_TAB_NAME     = "ugc_users"
 ACTOR_PROFILE      = "apify~instagram-profile-scraper"
+ACTOR_STORY        = "seemuapps~instagram-story-scraper"
 APIFY_BASE         = "https://api.apify.com/v2"
 
 # Sheets 헤더 컬럼 인덱스 (0-based)
@@ -149,8 +150,67 @@ def scrape_profiles(usernames: list[str]) -> list[dict]:
     return all_results
 
 
+# ── 2b. Apify Story Scraper 실행 ─────────────────
+def scrape_stories(usernames: list[str]) -> dict[str, list[str]]:
+    """username → 스토리 이미지 URL 배열 매핑 반환 (최대 10장)"""
+    if not usernames:
+        return {}
+    print(f"\n[2-b] Apify 스토리 스캔 — {len(usernames)}명")
+
+    story_map = {}
+    chunks = [usernames[i:i+5] for i in range(0, len(usernames), 5)]
+
+    for idx, chunk in enumerate(chunks):
+        print(f"  스토리 배치 {idx+1}/{len(chunks)} ({len(chunk)}명)...", end="", flush=True)
+        try:
+            resp = requests.post(
+                f"{APIFY_BASE}/acts/{ACTOR_STORY}/runs?token={APIFY_API_TOKEN}",
+                json={"usernames": chunk},
+                timeout=30,
+            )
+            resp.raise_for_status()
+            run_id = resp.json()["data"]["id"]
+            deadline = time.time() + 180
+            status_data = {}
+            while time.time() < deadline:
+                time.sleep(5)
+                r = requests.get(f"{APIFY_BASE}/actor-runs/{run_id}?token={APIFY_API_TOKEN}", timeout=15)
+                status_data = r.json()["data"]
+                if status_data["status"] == "SUCCEEDED": break
+                if status_data["status"] in ("FAILED", "ABORTED", "TIMED-OUT"): break
+
+            if status_data.get("status") == "SUCCEEDED":
+                items = requests.get(
+                    f"{APIFY_BASE}/datasets/{status_data['defaultDatasetId']}/items?token={APIFY_API_TOKEN}",
+                    timeout=30,
+                ).json()
+                for it in items:
+                    uname = (it.get("username") or "").lower()
+                    stories = it.get("stories") or []
+                    if not stories or not uname:
+                        continue
+                    # 이미지 스토리 URL 배열 (최대 10장)
+                    urls = []
+                    for s in stories[:10]:
+                        url = s.get("mediaUrl")
+                        if url and s.get("mediaType") == "image":
+                            urls.append(url)
+                    if urls:
+                        story_map[uname] = urls
+            print(f" +{sum(1 for u in chunk if u.lower() in story_map)}명")
+        except Exception as e:
+            print(f" ⚠️  실패: {e}")
+        if idx < len(chunks) - 1:
+            time.sleep(2)
+
+    print(f"  ✅ 스토리 있는 유저: {len(story_map)}명")
+    return story_map
+
+
 # ── 3. 변화 감지 및 Sheets 업데이트 ──────────────
-def detect_and_update(sheet, users: list[dict], profiles: list[dict], headers_map: dict):
+def detect_and_update(sheet, users: list[dict], profiles: list[dict], headers_map: dict,
+                      story_map: dict[str, list[str]] = None):
+    story_map = story_map or {}
     # username → 프로필 데이터 매핑
     profile_map = {}
     for p in profiles:
@@ -177,13 +237,10 @@ def detect_and_update(sheet, users: list[dict], profiles: list[dict], headers_ma
 
         # 데이터 추출
         curr_profile_url = profile.get("profilePicUrl") or profile.get("profilePicUrlHD") or ""
-        has_story        = profile.get("hasPublicStory", False)
-        # 스토리 이미지 URL (가능한 필드들에서 추출)
-        stories          = profile.get("stories") or profile.get("latestStories") or []
-        story_image_url  = ""
-        if stories and isinstance(stories, list):
-            s0 = stories[0]
-            story_image_url = s0.get("displayUrl") or s0.get("imageUrl") or s0.get("url", "")
+        # 스토리 이미지 URL 배열 (여러 장 판별용) — 별도 스토리 actor 결과
+        story_image_urls = story_map.get(username.lower(), [])
+        story_image_url  = story_image_urls[0] if story_image_urls else ""
+        has_story        = bool(story_image_urls) or profile.get("hasPublicStory", False)
 
         latest_posts     = profile.get("latestPosts") or profile.get("posts") or []
         # 피드 최대 5개: 이미지 URL 배열 + (post_url, image_url) 아이템 배열
@@ -243,7 +300,8 @@ def detect_and_update(sheet, users: list[dict], profiles: list[dict], headers_ma
                 "has_story":         has_story,
                 "has_feed":          bool(latest_feed_items),
                 "profile_url":       curr_profile_url,     # 프사 이미지 URL
-                "story_image_url":   story_image_url,      # 스토리 이미지 URL
+                "story_image_url":   story_image_url,      # 첫 스토리 이미지 URL (호환용)
+                "story_image_urls":  story_image_urls,     # 스토리 이미지 URL 배열 (판별용)
                 "latest_feed_urls":  latest_feed_urls,     # 피드 이미지 URL 배열 (판별용)
                 "latest_feed_items": latest_feed_items,    # 피드 게시물 메타 (post_url+image_url)
                 "latest_feed_url":   latest_feed_url,      # 첫 게시물 페이지 URL (시트 표시용)
@@ -326,9 +384,10 @@ def main():
 
     usernames = [u["username"] for u in users]
     profiles  = scrape_profiles(usernames)
+    story_map = scrape_stories(usernames)
 
     print(f"\n[3단계] 변화 감지 및 Sheets 업데이트 중...")
-    changed_users = detect_and_update(sheet, users, profiles, headers_map)
+    changed_users = detect_and_update(sheet, users, profiles, headers_map, story_map)
 
     print_results(changed_users)
 
