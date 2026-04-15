@@ -85,7 +85,35 @@
   .upload-text { flex: 1; }
   .upload-text .upload-title { font-size: 13px; color: var(--text); margin-bottom: 3px; }
   .upload-text .upload-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
-  #fileInput { display: none; }
+  #refFileInput { display: none; }
+
+  /* 다중 레퍼런스 이미지 */
+  .ref-images-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .ref-image-slot {
+    position: relative; width: 80px; height: 80px;
+    border-radius: 8px; overflow: hidden;
+    border: 1px solid var(--accent); flex-shrink: 0;
+  }
+  .ref-image-slot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ref-delete-btn {
+    position: absolute; top: 3px; right: 3px;
+    width: 18px; height: 18px; border-radius: 50%;
+    background: rgba(0,0,0,0.55); color: #fff;
+    border: none; cursor: pointer; font-size: 12px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
+  }
+  .ref-delete-btn:hover { background: rgba(0,0,0,0.8); }
+  .ref-add-btn {
+    width: 80px; height: 80px; border-radius: 8px;
+    border: 1.5px dashed var(--border2); background: var(--bg);
+    cursor: pointer; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 4px;
+    color: var(--muted); transition: border-color 0.2s, color 0.2s, background 0.2s;
+    flex-shrink: 0; font-size: 22px; font-weight: 300;
+  }
+  .ref-add-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .ref-add-btn .ref-add-label { font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 0.08em; }
 
   .run-btn { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 8px; padding: 13px 24px; font-family: 'Geist', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; transition: background 0.15s, transform 0.1s; }
   .run-btn:hover { background: var(--accent-dark); }
@@ -181,16 +209,9 @@
     </div>
     <input type="file" id="commentInput" accept=".xlsx,.csv" onchange="handleCommentFileUpload(event)" />
 
-    <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(이 스타일과 비슷한 이미지를 찾아요)</span></label>
-    <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
-      <div class="upload-icon" id="uploadIcon">+</div>
-      <img class="upload-preview" id="uploadPreview" />
-      <div class="upload-text">
-        <div class="upload-title" id="uploadTitle">이미지를 클릭해서 업로드하세요</div>
-        <div class="upload-sub" id="uploadSub">PNG, JPG 지원 · 우리 프롬프트로 만든 샘플 이미지</div>
-      </div>
-    </div>
-    <input type="file" id="fileInput" accept="image/*" onchange="handleImageUpload(event)" />
+    <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(최대 5장 · 하나라도 일치하면 UGC로 판별)</span></label>
+    <div class="ref-images-row" id="refImagesRow"></div>
+    <input type="file" id="refFileInput" accept="image/*" onchange="handleRefImageAdd(event)" />
 
     <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
     <div class="input-hint">댓글 파일과 레퍼런스 이미지를 모두 업로드해야 수집이 시작돼요.</div>
@@ -247,7 +268,7 @@
   let allResults = [];
   let currentFilter = 'all';
   let pollTimer = null;
-  let uploadedFile = null;      // 레퍼런스 이미지
+  let refImages   = [];         // 레퍼런스 이미지 파일 배열 (최대 5)
   let commentFile = null;       // 댓글 파일 (xlsx/csv)
 
   function handleCommentFileUpload(e) {
@@ -263,25 +284,45 @@
   // ← Render 배포 후 실제 URL로 교체
   const API_BASE = 'https://ugc-monitor-api.onrender.com';
 
-  // ── 이미지 업로드 ──────────────────────────────
-  function handleImageUpload(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-    uploadedFile = file;
+  // ── 레퍼런스 이미지 (다중) ─────────────────────
+  function renderRefImages() {
+    const row = document.getElementById('refImagesRow');
+    row.innerHTML = '';
 
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const preview = document.getElementById('uploadPreview');
-      const icon    = document.getElementById('uploadIcon');
-      const area    = document.getElementById('uploadArea');
-      preview.src = ev.target.result;
-      preview.classList.add('visible');
-      icon.classList.add('hidden');
-      area.classList.add('has-image');
-      document.getElementById('uploadTitle').textContent = file.name;
-      document.getElementById('uploadSub').textContent   = `${(file.size/1024).toFixed(0)}KB · 업로드 완료`;
-    };
-    reader.readAsDataURL(file);
+    refImages.forEach((file, idx) => {
+      const slot = document.createElement('div');
+      slot.className = 'ref-image-slot';
+
+      const img = document.createElement('img');
+      img.src = URL.createObjectURL(file);
+
+      const del = document.createElement('button');
+      del.className = 'ref-delete-btn';
+      del.innerHTML = '×';
+      del.title = '삭제';
+      del.onclick = (e) => { e.stopPropagation(); refImages.splice(idx, 1); renderRefImages(); };
+
+      slot.appendChild(img);
+      slot.appendChild(del);
+      row.appendChild(slot);
+    });
+
+    if (refImages.length < 5) {
+      const add = document.createElement('div');
+      add.className = 'ref-add-btn';
+      add.innerHTML = `<span>+</span><span class="ref-add-label">${refImages.length}/5</span>`;
+      add.title = '이미지 추가';
+      add.onclick = () => document.getElementById('refFileInput').click();
+      row.appendChild(add);
+    }
+  }
+
+  function handleRefImageAdd(e) {
+    const file = e.target.files[0];
+    if (!file || refImages.length >= 5) return;
+    refImages.push(file);
+    renderRefImages();
+    e.target.value = '';
   }
 
   // ── 스캔 시작 ──────────────────────────────────
@@ -297,8 +338,8 @@
     if (!commentFile) {
       showToast('댓글 파일(xlsx/csv)을 업로드해주세요'); return;
     }
-    if (!uploadedFile) {
-      showToast('레퍼런스 이미지를 업로드해주세요'); return;
+    if (!refImages.length) {
+      showToast('레퍼런스 이미지를 1장 이상 업로드해주세요'); return;
     }
 
     setRunning(true);
@@ -321,7 +362,7 @@
       const formData = new FormData();
       formData.append('post_url', url);
       formData.append('comment_file', commentFile);
-      formData.append('reference_image', uploadedFile);
+      refImages.forEach((file, i) => formData.append(`reference_image_${i + 1}`, file));
 
       const resp = await fetch(`${API_BASE}/scan`, { method: 'POST', body: formData });
 
@@ -461,6 +502,9 @@
   }
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  // 초기 렌더
+  renderRefImages();
 </script>
 </body>
 </html>
