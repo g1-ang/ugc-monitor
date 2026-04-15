@@ -158,7 +158,7 @@ def scrape_stories(usernames: list[str]) -> dict[str, list[str]]:
     print(f"\n[2-b] Apify 스토리 스캔 — {len(usernames)}명")
 
     story_map = {}
-    chunks = [usernames[i:i+5] for i in range(0, len(usernames), 5)]
+    chunks = [usernames[i:i+20] for i in range(0, len(usernames), 20)]
 
     for idx, chunk in enumerate(chunks):
         print(f"  스토리 배치 {idx+1}/{len(chunks)} ({len(chunk)}명)...", end="", flush=True)
