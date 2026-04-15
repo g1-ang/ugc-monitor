@@ -124,8 +124,10 @@
   .progress-bar-wrap { height: 3px; background: var(--border); border-radius: 99px; overflow: hidden; margin-top: 18px; display: none; }
   .progress-bar-wrap.visible { display: block; }
   .progress-bar { height: 100%; background: var(--accent); width: 0%; transition: width 0.4s ease; border-radius: 99px; }
-  .progress-label { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 8px; display: none; }
-  .progress-label.visible { display: block; }
+  .progress-label { margin-top: 10px; display: none; }
+  .progress-label.visible { display: flex; align-items: baseline; gap: 10px; }
+  .progress-step { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text); font-weight: 500; }
+  .progress-time { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); }
 
   .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
   .summary-card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 22px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); transition: border-color 0.25s, background 0.25s; }
@@ -216,7 +218,10 @@
     <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
     <div class="input-hint">댓글 파일과 레퍼런스 이미지를 모두 업로드해야 수집이 시작돼요.</div>
     <div class="progress-bar-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
-    <div class="progress-label" id="progressLabel"></div>
+    <div class="progress-label" id="progressLabel">
+      <span class="progress-step" id="progressStep"></span>
+      <span class="progress-time" id="progressTime"></span>
+    </div>
   </div>
 
   <div class="summary-grid">
@@ -482,9 +487,23 @@
     if (!on) document.getElementById('progressBar').style.width = '0%';
   }
 
-  function setProgress(pct, label) {
+  const STEP_MAP = [
+    { match: /서버 시작|서버 연결/,  step: '서버 연결 중...',      time: '최초 실행 시 최대 30초 소요' },
+    { match: /파싱|파일/,            step: '댓글 파일 파싱 중...',  time: '잠시만 기다려주세요'         },
+    { match: /유저.*확인|추가/,      step: '유저 목록 확인 중...',  time: '잠시만 기다려주세요'         },
+    { match: /프로필 스캔/,          step: '프로필 스캔 중...',     time: '약 3~5분 소요'              },
+    { match: /스토리 스캔/,          step: '스토리 스캔 중...',     time: '약 2~4분 소요'              },
+    { match: /AI.*판별|판별 중/,     step: 'AI 이미지 판별 중...',  time: '약 5~10분 소요'             },
+    { match: /완료/,                 step: '스캔 완료!',            time: ''                           },
+  ];
+
+  function setProgress(pct, rawLabel) {
     document.getElementById('progressBar').style.width = pct + '%';
-    document.getElementById('progressLabel').textContent = label;
+    const found = STEP_MAP.find(s => s.match.test(rawLabel));
+    const step  = found ? found.step : (rawLabel || '');
+    const time  = found ? found.time : '';
+    document.getElementById('progressStep').textContent = step;
+    document.getElementById('progressTime').textContent = time;
   }
 
   function animateCount(id, target) {
