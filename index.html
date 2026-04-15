@@ -171,6 +171,20 @@
   .empty-state p { font-size: 13px; color: var(--muted); line-height: 1.8; }
   .empty-state p span { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted2); display: block; margin-top: 4px; }
 
+  .export-btn { font-family: 'DM Mono', monospace; font-size: 10px; padding: 5px 12px; border-radius: 6px; border: 1px solid var(--accent); background: var(--accent-light); color: var(--accent-dark); cursor: pointer; transition: background 0.15s; display: none; }
+  .export-btn:hover { background: var(--accent); color: #fff; }
+  .export-btn.visible { display: inline-flex; align-items: center; gap: 5px; }
+
+  .history-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-top: 24px; }
+  .history-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); }
+  .history-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+  .history-row { display: grid; grid-template-columns: 130px 1fr 60px 60px 60px 70px; align-items: center; padding: 11px 24px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .history-row:last-child { border-bottom: none; }
+  .history-row.head { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--bg); padding: 9px 24px; }
+  .history-row:not(.head):hover { background: var(--surface2); }
+  .hist-url { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--accent-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hist-num { font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500; }
+
   .toast { position: fixed; bottom: 32px; right: 32px; background: var(--text); color: var(--surface); border-radius: 8px; padding: 11px 18px; font-family: 'DM Mono', monospace; font-size: 11px; opacity: 0; transform: translateY(8px); transition: all 0.25s; z-index: 100; }
   .toast.show { opacity: 1; transform: translateY(0); }
   @media (max-width: 640px) {
@@ -245,11 +259,14 @@
   <div class="results-section">
     <div class="results-header">
       <span class="results-title">감지된 UGC</span>
-      <div class="filter-tabs">
-        <button class="filter-tab active" onclick="filterResults('all', this)">전체</button>
-        <button class="filter-tab" onclick="filterResults('feed', this)">피드</button>
-        <button class="filter-tab" onclick="filterResults('story', this)">스토리</button>
-        <button class="filter-tab" onclick="filterResults('profile', this)">프사</button>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <button class="export-btn" id="exportBtn" onclick="downloadPptx()">⬇ PPTX 저장</button>
+        <div class="filter-tabs">
+          <button class="filter-tab active" onclick="filterResults('all', this)">전체</button>
+          <button class="filter-tab" onclick="filterResults('feed', this)">피드</button>
+          <button class="filter-tab" onclick="filterResults('story', this)">스토리</button>
+          <button class="filter-tab" onclick="filterResults('profile', this)">프사</button>
+        </div>
       </div>
     </div>
     <div class="results-table">
@@ -263,6 +280,17 @@
             <span>댓글 유저 → 프로필 스캔 → AI 판별 순으로 진행됩니다</span>
           </p>
         </div>
+      </div>
+    </div>
+  </div>
+  <div class="history-section" id="historySection" style="display:none;">
+    <div class="history-header">
+      <span class="history-title">스캔 히스토리</span>
+      <button onclick="loadHistory()" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer;">↺ 새로고침</button>
+    </div>
+    <div id="historyBody">
+      <div class="history-row head">
+        <span>날짜</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
       </div>
     </div>
   </div>
@@ -458,7 +486,9 @@
     applyFilter(currentFilter);
     document.getElementById('statusDot').className = 'dot ready';
     document.getElementById('statusText').textContent = `마지막 스캔: 방금 전 · 총 ${results.length}건`;
+    document.getElementById('exportBtn').className = results.length ? 'export-btn visible' : 'export-btn';
     showToast(`UGC ${results.length}건 감지 완료`);
+    loadHistory();
   }
 
   function applyFilter(type) {
@@ -547,6 +577,50 @@
     document.getElementById('progressTime').textContent = time;
   }
 
+  // ── PPTX 내보내기 ──────────────────────────────
+  async function downloadPptx() {
+    showToast('PPTX 생성 중...');
+    try {
+      const resp = await fetch(`${API_BASE}/export/pptx`);
+      if (!resp.ok) { showToast('내보내기 실패'); return; }
+      const blob = await resp.blob();
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = `ugc_report_${new Date().toISOString().slice(0,10)}.pptx`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      showToast('내보내기 오류: ' + e.message);
+    }
+  }
+
+  // ── 스캔 히스토리 ──────────────────────────────
+  async function loadHistory() {
+    try {
+      const resp = await fetch(`${API_BASE}/history`);
+      const data = await resp.json();
+      const rows = (data.history || []).slice().reverse(); // 최신순
+      const sec  = document.getElementById('historySection');
+      const body = document.getElementById('historyBody');
+      if (!rows.length) { sec.style.display = 'none'; return; }
+      sec.style.display = 'block';
+      body.innerHTML = `<div class="history-row head">
+        <span>날짜</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
+      </div>` + rows.map(r => `
+        <div class="history-row">
+          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${r['날짜'] || ''}</span>
+          <span class="hist-url">${r['게시물URL'] ? `<a href="${r['게시물URL']}" target="_blank" style="color:var(--accent-dark);text-decoration:none">${r['게시물URL']}</a>` : '—'}</span>
+          <span class="hist-num" style="color:var(--accent-dark)">${r['피드'] || 0}</span>
+          <span class="hist-num" style="color:#c07840">${r['스토리'] || 0}</span>
+          <span class="hist-num" style="color:#4878b8">${r['프사'] || 0}</span>
+          <span class="hist-num" style="color:var(--text)">${r['총계'] || 0}건</span>
+        </div>`).join('');
+    } catch (e) {
+      console.warn('히스토리 로드 실패:', e);
+    }
+  }
+
   function animateCount(id, target) {
     const el = document.getElementById(id);
     let cur = 0;
@@ -565,6 +639,7 @@
 
   // 초기 렌더
   renderRefImages();
+  loadHistory();
 </script>
 </body>
 </html>
