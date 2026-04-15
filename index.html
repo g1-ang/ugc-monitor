@@ -495,7 +495,7 @@
     document.getElementById('statusText').textContent = on ? '분석 중...' : '대기 중';
     document.getElementById('progressWrap').className = on ? 'progress-bar-wrap visible' : 'progress-bar-wrap';
     document.getElementById('progressLabel').className = on ? 'progress-label visible' : 'progress-label';
-    if (!on) document.getElementById('progressBar').style.width = '0%';
+    if (!on) { document.getElementById('progressBar').style.width = '0%'; aiEta = { startTime: null, startDone: 0, total: 0 }; }
   }
 
   const STEP_MAP = [
@@ -508,11 +508,41 @@
     { match: /완료/,                 step: '스캔 완료!',            time: ''                           },
   ];
 
+  // AI 판별 단계 진행률 추적 (남은 시간 계산용)
+  let aiEta = { startTime: null, startDone: 0, total: 0 };
+
+  function fmtRemaining(ms) {
+    if (ms <= 0) return '거의 완료';
+    const m = Math.floor(ms / 60000);
+    const s = Math.floor((ms % 60000) / 1000);
+    return m > 0 ? `약 ${m}분 ${s}초 남음` : `약 ${s}초 남음`;
+  }
+
   function setProgress(pct, rawLabel) {
     document.getElementById('progressBar').style.width = pct + '%';
     const found = STEP_MAP.find(s => s.match.test(rawLabel));
     const step  = found ? found.step : (rawLabel || '');
-    const time  = found ? found.time : '';
+    let   time  = found ? found.time : '';
+
+    // AI 판별 단계: "(N/M명)" 파싱해서 남은 시간 동적 계산
+    const aiMatch = rawLabel && rawLabel.match(/\((\d+)\/(\d+)명\)/);
+    if (aiMatch) {
+      const done  = parseInt(aiMatch[1]);
+      const total = parseInt(aiMatch[2]);
+      if (!aiEta.startTime || aiEta.total !== total) {
+        aiEta = { startTime: Date.now(), startDone: done, total };
+      }
+      const doneSinceStart = done - aiEta.startDone;
+      if (doneSinceStart >= 3) {
+        const elapsed    = Date.now() - aiEta.startTime;
+        const avgPerUser = elapsed / doneSinceStart;
+        const remaining  = (total - done) * avgPerUser;
+        time = `${done}/${total}명 완료 · ${fmtRemaining(remaining)}`;
+      } else {
+        time = `${done}/${total}명 완료 · 계산 중...`;
+      }
+    }
+
     document.getElementById('progressStep').textContent = step;
     document.getElementById('progressTime').textContent = time;
   }
