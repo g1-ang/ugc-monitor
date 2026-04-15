@@ -191,7 +191,7 @@ def scrape_stories(usernames: list[str]) -> dict[str, list[str]]:
                         continue
                     # 이미지 + 비디오(썸네일용) 모두 포함, 최대 10장
                     urls = []
-                    for s in stories[:10]:
+                    for s in stories:
                         url = s.get("mediaUrl")
                         if url:
                             urls.append(url)

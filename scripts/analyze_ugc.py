@@ -223,7 +223,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", type=str, default="phase3_candidates.json")
     parser.add_argument("--reference", type=str, required=True,
-                        help="레퍼런스 이미지 파일 경로")
+                        help="레퍼런스 이미지 파일 경로 (쉼표로 여러 장 지정 가능)")
     args = parser.parse_args()
 
     print("=" * 55)
@@ -239,17 +239,23 @@ def main():
         print(f"❌ .env 파일에 없는 값: {', '.join(missing)}")
         sys.exit(1)
 
-    if not os.path.exists(args.reference):
-        print(f"❌ 레퍼런스 이미지 없음: {args.reference}")
-        sys.exit(1)
+    ref_paths = [p.strip() for p in args.reference.split(",") if p.strip()]
+    for rp in ref_paths:
+        if not os.path.exists(rp):
+            print(f"❌ 레퍼런스 이미지 없음: {rp}")
+            sys.exit(1)
 
     if not os.path.exists(args.data):
         print(f"❌ 후보 파일 없음: {args.data}")
         sys.exit(1)
 
-    # 레퍼런스 로드 (data URI)
-    ref_uri = file_to_data_uri(args.reference)
-    print(f"✅ 레퍼런스 로드: {args.reference} ({len(ref_uri)//1024} KB base64)")
+    # 레퍼런스 로드 (data URI 리스트)
+    ref_uris = []
+    for rp in ref_paths:
+        uri = file_to_data_uri(rp)
+        ref_uris.append(uri)
+        print(f"✅ 레퍼런스 로드: {rp} ({len(uri)//1024} KB base64)")
+    print(f"   총 {len(ref_uris)}장의 레퍼런스 사용 (하나라도 YES → UGC)")
 
     with open(args.data, encoding="utf-8") as f:
         candidates = json.load(f)
@@ -293,9 +299,12 @@ def main():
         matched_post = ""
 
         for img_type, img_url, post_url in images_to_check:
-            result = call_model(ref_uri, img_url, img_type)
-            if result is True:
-                is_ugc, ugc_type, matched_post = True, img_type, post_url
+            for ref_uri in ref_uris:
+                result = call_model(ref_uri, img_url, img_type)
+                if result is True:
+                    is_ugc, ugc_type, matched_post = True, img_type, post_url
+                    break
+            if is_ugc:
                 break
 
         with sheet_lock:
