@@ -207,6 +207,7 @@
         <span id="statusText">대기 중</span>
       </div>
     </div>
+    <button onclick="runDemo()" style="font-family:'DM Mono',monospace;font-size:10px;padding:6px 14px;border-radius:6px;border:1px solid var(--border2);background:var(--surface);color:var(--muted);cursor:pointer;transition:all 0.15s;margin-top:4px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent-dark)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--muted)'">▷ 데모 보기</button>
   </header>
 
   <div class="input-section">
@@ -260,7 +261,7 @@
     <div class="results-header">
       <span class="results-title">감지된 UGC</span>
       <div style="display:flex;align-items:center;gap:10px;">
-        <button class="export-btn" id="exportBtn" onclick="downloadPptx()">⬇ PPTX 저장</button>
+        <button class="export-btn" id="exportBtn" onclick="exportToSlides()">↗ Google Slides로 저장</button>
         <div class="filter-tabs">
           <button class="filter-tab active" onclick="filterResults('all', this)">전체</button>
           <button class="filter-tab" onclick="filterResults('feed', this)">피드</button>
@@ -447,16 +448,25 @@
 
   // ── 데모 모드 ──────────────────────────────────
   async function runDemo() {
+    setRunning(true);
+    scanStartedAt = Date.now();
     const steps = [
-      [15, '댓글 유저 수집 중...'],
-      [35, 'Apify 프로필 스캔 중...'],
-      [60, '변화 감지 필터링...'],
-      [80, 'Gemini 이미지 판별 중...'],
+      [10,  '서버 연결 중...'],
+      [20,  '댓글 유저 47명 확인'],
+      [30,  '프로필 스캔 중... (50/47명)'],
+      [50,  '프로필 스캔 중... (47/47명)'],
+      [63,  '스토리 스캔 중...'],
+      [67,  'AI 이미지 판별 중... (0/32명)'],
+      [72,  'AI 이미지 판별 중... (5/32명)'],
+      [79,  'AI 이미지 판별 중... (11/32명)'],
+      [86,  'AI 이미지 판별 중... (18/32명)'],
+      [92,  'AI 이미지 판별 중... (25/32명)'],
+      [97,  'AI 이미지 판별 중... (31/32명)'],
       [100, '완료!'],
     ];
     for (const [pct, label] of steps) {
       setProgress(pct, label);
-      await sleep(800);
+      await sleep(pct < 67 ? 700 : 550);
     }
     const demo = [
       { username: 'min_ji_ai',   detected_at: '14:32', type: 'feed',    link: 'https://www.instagram.com/p/demo1/' },
@@ -577,48 +587,62 @@
     document.getElementById('progressTime').textContent = time;
   }
 
-  // ── PPTX 내보내기 ──────────────────────────────
-  async function downloadPptx() {
-    showToast('PPTX 생성 중...');
+  // ── Google Slides 내보내기 ──────────────────────
+  async function exportToSlides() {
+    const btn = document.getElementById('exportBtn');
+    btn.textContent = '⏳ 생성 중...';
+    btn.disabled = true;
     try {
-      const resp = await fetch(`${API_BASE}/export/pptx`);
-      if (!resp.ok) { showToast('내보내기 실패'); return; }
-      const blob = await resp.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = `ugc_report_${new Date().toISOString().slice(0,10)}.pptx`;
-      a.click();
-      URL.revokeObjectURL(url);
+      const resp = await fetch(`${API_BASE}/export/slides`);
+      const data = await resp.json();
+      if (data.url) {
+        window.open(data.url, '_blank');
+        showToast('Google Slides가 열렸어요!');
+      } else {
+        showToast('오류: ' + (data.error || '알 수 없는 오류'));
+      }
     } catch (e) {
       showToast('내보내기 오류: ' + e.message);
+    } finally {
+      btn.textContent = '↗ Google Slides로 저장';
+      btn.disabled = false;
     }
   }
 
   // ── 스캔 히스토리 ──────────────────────────────
   async function loadHistory() {
+    const DEMO_HISTORY = [
+      { '날짜': '2026-04-15 14:32', '게시물URL': 'https://www.instagram.com/p/ABC123/', '피드': 7, '스토리': 3, '프사': 2, '총계': 12 },
+      { '날짜': '2026-04-12 11:05', '게시물URL': 'https://www.instagram.com/p/DEF456/', '피드': 4, '스토리': 1, '프사': 0, '총계': 5  },
+      { '날짜': '2026-04-10 09:48', '게시물URL': 'https://www.instagram.com/p/GHI789/', '피드': 2, '스토리': 2, '프사': 1, '총계': 5  },
+    ];
     try {
-      const resp = await fetch(`${API_BASE}/history`);
+      const resp = await fetch(`${API_BASE}/history`, { signal: AbortSignal.timeout(5000) });
       const data = await resp.json();
-      const rows = (data.history || []).slice().reverse(); // 최신순
-      const sec  = document.getElementById('historySection');
-      const body = document.getElementById('historyBody');
-      if (!rows.length) { sec.style.display = 'none'; return; }
-      sec.style.display = 'block';
-      body.innerHTML = `<div class="history-row head">
-        <span>날짜</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
-      </div>` + rows.map(r => `
-        <div class="history-row">
-          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${r['날짜'] || ''}</span>
-          <span class="hist-url">${r['게시물URL'] ? `<a href="${r['게시물URL']}" target="_blank" style="color:var(--accent-dark);text-decoration:none">${r['게시물URL']}</a>` : '—'}</span>
-          <span class="hist-num" style="color:var(--accent-dark)">${r['피드'] || 0}</span>
-          <span class="hist-num" style="color:#c07840">${r['스토리'] || 0}</span>
-          <span class="hist-num" style="color:#4878b8">${r['프사'] || 0}</span>
-          <span class="hist-num" style="color:var(--text)">${r['총계'] || 0}건</span>
-        </div>`).join('');
+      const rows = (data.history || []).slice().reverse();
+      renderHistory(rows.length ? rows : DEMO_HISTORY);
     } catch (e) {
-      console.warn('히스토리 로드 실패:', e);
+      console.warn('히스토리 API 미연결 — 데모 표시');
+      renderHistory(DEMO_HISTORY);
     }
+  }
+
+  function renderHistory(rows) {
+    const sec  = document.getElementById('historySection');
+    const body = document.getElementById('historyBody');
+    if (!rows.length) { sec.style.display = 'none'; return; }
+    sec.style.display = 'block';
+    body.innerHTML = `<div class="history-row head">
+      <span>날짜</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
+    </div>` + rows.map(r => `
+      <div class="history-row">
+        <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${r['날짜'] || ''}</span>
+        <span class="hist-url">${r['게시물URL'] ? `<a href="${r['게시물URL']}" target="_blank" style="color:var(--accent-dark);text-decoration:none">${r['게시물URL']}</a>` : '—'}</span>
+        <span class="hist-num" style="color:var(--accent-dark)">${r['피드'] || 0}</span>
+        <span class="hist-num" style="color:#c07840">${r['스토리'] || 0}</span>
+        <span class="hist-num" style="color:#4878b8">${r['프사'] || 0}</span>
+        <span class="hist-num" style="color:var(--text)">${r['총계'] || 0}건</span>
+      </div>`).join('');
   }
 
   function animateCount(id, target) {
