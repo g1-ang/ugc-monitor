@@ -440,6 +440,11 @@
         clearInterval(pollTimer);
         showToast('스캔 중 오류가 발생했습니다.');
         setRunning(false);
+      } else if (data.status === 'idle' && Date.now() - scanStartedAt > 15000) {
+        // 스캔 시작 후 15초 지났는데도 서버가 idle = 서버가 재시작됨
+        clearInterval(pollTimer);
+        showToast('서버가 중간에 재시작됐어요. 다시 시도해주세요.');
+        setRunning(false);
       }
     } catch (err) {
       console.error('[poll error]', err);
