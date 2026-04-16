@@ -1,3 +1,4 @@
+from __future__ import annotations
 """
 analyze_ugc.py  [Phase 3 — NAVER Open Models (Qwen2.5-VL) 판별]
 ────────────────────────────────────────────────────
@@ -28,7 +29,7 @@ NAVER_API_KEY      = os.getenv("NAVER_API_KEY")
 SPREADSHEET_ID     = os.getenv("SPREADSHEET_ID")
 GOOGLE_CREDENTIALS = os.getenv("GOOGLE_CREDENTIALS_PATH", "config/google_credentials.json")
 SHEET_TAB_NAME     = "ugc_users"
-MODEL_NAME         = "Qwen2.5-VL-32B-Instruct"
+MODEL_NAME         = "gemini-2.0-flash"
 
 PROMPT_FEED = """[이미지 1]은 특정 AI 프롬프트로 만든 레퍼런스 결과물입니다.
 [이미지 2]는 유저가 올린 판별 대상 피드 게시물입니다.
@@ -129,6 +130,7 @@ def call_model(reference_data_uri: str, target_url: str, img_type: str = "feed",
         return None
     payload = {
         "model": MODEL_NAME,
+        "target_model_names": MODEL_NAME,
         "messages": [{
             "role": "user",
             "content": [
@@ -144,6 +146,7 @@ def call_model(reference_data_uri: str, target_url: str, img_type: str = "feed",
     }
     headers = {
         "Authorization": f"Bearer {NAVER_API_KEY}",
+        "custom-llm-provider": "vertex_ai",
         "Content-Type": "application/json",
     }
     endpoint = f"{NAVER_API_URL}/chat/completions"
@@ -299,11 +302,15 @@ def main():
         matched_post = ""
 
         for img_type, img_url, post_url in images_to_check:
-            for ref_uri in ref_uris:
-                result = call_model(ref_uri, img_url, img_type)
-                if result is True:
-                    is_ugc, ugc_type, matched_post = True, img_type, post_url
-                    break
+            # 3장 레퍼런스 병렬 비교 — 하나라도 YES면 확정
+            with ThreadPoolExecutor(max_workers=len(ref_uris)) as ref_ex:
+                futures = [ref_ex.submit(call_model, ru, img_url, img_type) for ru in ref_uris]
+                for fut in as_completed(futures):
+                    if fut.result() is True:
+                        is_ugc, ugc_type, matched_post = True, img_type, post_url
+                        for f in futures:
+                            f.cancel()
+                        break
             if is_ugc:
                 break
 
