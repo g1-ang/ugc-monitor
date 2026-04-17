@@ -226,12 +226,15 @@
     </div>
     <input type="file" id="commentInput" accept=".xlsx,.csv" onchange="handleCommentFileUpload(event)" />
 
-    <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(최대 5장 · 하나라도 일치하면 UGC로 판별)</span></label>
+    <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(최대 5장 · 다수결 매칭)</span></label>
     <div class="ref-images-row" id="refImagesRow"></div>
     <input type="file" id="refFileInput" accept="image/*" onchange="handleRefImageAdd(event)" />
 
+    <label class="input-label" style="margin-top:18px;">원본 AI 프롬프트 텍스트 <span style="color:var(--muted2);font-weight:300">(필수 · 정확도 핵심)</span></label>
+    <textarea class="url-input" id="promptInput" rows="8" placeholder="레퍼런스 이미지를 만든 AI 프롬프트 전문을 붙여넣으세요. 텍스트가 자세할수록 판별 정확도가 올라갑니다 (장면·의상·구도·색감·금지 항목 등)." style="font-family:inherit;line-height:1.5;padding:12px;resize:vertical;min-height:100px;width:100%;box-sizing:border-box;"></textarea>
+
     <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
-    <div class="input-hint">댓글 파일과 레퍼런스 이미지를 모두 업로드해야 수집이 시작돼요.</div>
+    <div class="input-hint">댓글 파일 · 레퍼런스 이미지 · 프롬프트 텍스트를 모두 입력해야 수집이 시작돼요.</div>
     <div class="progress-bar-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
     <div class="progress-label" id="progressLabel">
       <span class="progress-step" id="progressStep"></span>
@@ -370,11 +373,15 @@
 
   async function startScan() {
     const url = document.getElementById('urlInput').value.trim();
+    const promptText = document.getElementById('promptInput').value.trim();
     if (!commentFile) {
       showToast('댓글 파일(xlsx/csv)을 업로드해주세요'); return;
     }
     if (!refImages.length) {
       showToast('레퍼런스 이미지를 1장 이상 업로드해주세요'); return;
+    }
+    if (!promptText) {
+      showToast('원본 AI 프롬프트 텍스트를 입력해주세요'); return;
     }
 
     setRunning(true);
@@ -396,6 +403,7 @@
     try {
       const formData = new FormData();
       formData.append('post_url', url);
+      formData.append('prompt_text', promptText);
       formData.append('comment_file', commentFile);
       refImages.forEach((file, i) => formData.append(`reference_image_${i + 1}`, file));
 
