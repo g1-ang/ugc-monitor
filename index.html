@@ -320,7 +320,10 @@
   }
 
   // ← Render 배포 후 실제 URL로 교체
-  const API_BASE = 'https://ugc-monitor-api.onrender.com';
+  // 로컬 실행(localhost) 시 same-origin, 그 외엔 배포된 Render URL 사용
+  const API_BASE = (location.hostname === 'localhost' || location.hostname === '127.0.0.1')
+    ? ''
+    : 'https://ugc-monitor-api.onrender.com';
 
   // ── 레퍼런스 이미지 (다중) ─────────────────────
   function renderRefImages() {
