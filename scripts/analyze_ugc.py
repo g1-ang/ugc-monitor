@@ -116,11 +116,23 @@ def file_to_data_uri(path: str, max_side: int = 1024) -> str:
 
 
 def video_url_to_data_uri(video_url: str) -> str | None:
-    """비디오 URL → 첫 프레임 → data URI. 음원 추가로 mp4로 저장된 스토리 처리용"""
+    """비디오 URL → 첫 프레임 → data URI. imageio-ffmpeg 번들 바이너리 사용
+    (pyav 는 Instagram CDN 의 모호한 mp4 스트림을 자주 못 읽어서 ffmpeg 직접 호출로 교체)"""
     try:
-        import imageio.v3 as iio
-        frame = iio.imread(video_url, index=0, plugin="pyav")
-        img = Image.fromarray(frame)
+        import subprocess
+        import imageio_ffmpeg
+        ffmpeg = imageio_ffmpeg.get_ffmpeg_exe()
+        proc = subprocess.run(
+            [ffmpeg, "-hide_banner", "-loglevel", "error",
+             "-i", video_url, "-frames:v", "1", "-f", "image2pipe",
+             "-vcodec", "mjpeg", "-"],
+            capture_output=True, timeout=30,
+        )
+        if proc.returncode != 0 or not proc.stdout:
+            stderr = proc.stderr.decode("utf-8", errors="ignore").strip().splitlines()[-1] if proc.stderr else ""
+            print(f"    ⚠️  비디오 프레임 추출 실패: ffmpeg rc={proc.returncode} {stderr[:80]}")
+            return None
+        img = Image.open(io.BytesIO(proc.stdout))
         if img.mode not in ("RGB", "L"):
             img = img.convert("RGB")
         img.thumbnail((1024, 1024), Image.LANCZOS)
@@ -428,6 +440,7 @@ def main():
                     "username": uname,
                     "ugc_type": r["ugc_type"],
                     "feed_url": r["matched_post"] or "",
+                    "status":   "pending",  # 휴먼 검수 대기 (approved/rejected 로 전환)
                 })
                 results_log.append({"username": uname, "is_ugc": True, "ugc_type": r["ugc_type"]})
             elif had_error and not r.get("skipped"):

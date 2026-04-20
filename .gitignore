@@ -3,11 +3,36 @@ config/google_credentials.json
 venv/
 __pycache__/
 *.pyc
+.DS_Store
+.claude/
+
+# Phase 3 state + runtime artifacts (per-install, not shared)
 phase3_candidates.json
 phase3_results.json
+phase3_failures.json
+phase3_retest_results.json
+phase3_*.json.bak
+phase3_*.log
+phase3_matched.csv
+
+# inner repo is tracked separately
 ugc-monitor-api/
+
+# Campaign reference images + data (per-campaign, not in git)
 reference*.jpg
 reference*.png
+ref_*.jpg
+ref_*.png
+*.jpeg
 *.xlsx
 *.csv
 *.pdf
+
+# Screenshots, old pptx / dev utilities
+*.pptx
+image*.png
+clip_scores.json
+debug_*.py
+test_clip*.py
+make_presentation.py
+make_sample_pptx.py

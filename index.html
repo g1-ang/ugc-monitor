@@ -41,6 +41,7 @@
 
   .input-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 28px; margin-bottom: 24px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
   .input-label { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-bottom: 12px; display: block; }
+  .label-required { display: inline-block; font-weight: 500; text-transform: none; letter-spacing: 0; font-size: 11px; color: var(--accent-dark); background: linear-gradient(transparent 50%, var(--accent-light) 50%); padding: 0 4px; border-radius: 2px; margin-left: 4px; }
   .url-row { display: flex; gap: 10px; margin-bottom: 16px; }
   .url-input { flex: 1; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 12px 16px; font-family: 'DM Mono', monospace; font-size: 12px; color: var(--text); outline: none; transition: border-color 0.2s, box-shadow 0.2s; }
   .url-input::placeholder { color: var(--muted2); }
@@ -142,14 +143,32 @@
   .card-sub { font-size: 11px; color: var(--muted); margin-top: 6px; }
 
   .results-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-  .results-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); }
+  .results-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-bottom: 1px solid var(--border); flex-wrap: wrap; gap: 10px; }
+  .review-progress { display: inline-flex; align-items: center; gap: 12px; font-size: 11px; font-family: 'DM Mono', monospace; color: var(--muted); margin-left: 12px; }
+  .review-progress .chip { padding: 3px 8px; border-radius: 12px; }
+  .review-progress .chip.total    { background: var(--surface2); color: var(--text); }
+  .review-progress .chip.approved { background: #e8f5e9; color: #2e7d32; }
+  .review-progress .chip.pending  { background: #fff4e1; color: #946300; }
+  .review-progress .chip.rejected { background: #ffebee; color: #c62828; }
+  .export-sheets-btn { padding: 8px 14px; border-radius: 8px; border: 1px solid var(--accent); background: var(--accent-light); color: var(--accent-dark); cursor: pointer; font-size: 12px; font-weight: 500; transition: all 0.15s; }
+  .export-sheets-btn:hover { background: var(--accent); color: white; }
+  .export-sheets-btn:disabled { opacity: 0.5; cursor: not-allowed; }
   .results-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
   .filter-tabs { display: flex; gap: 4px; }
   .filter-tab { font-family: 'DM Mono', monospace; font-size: 10px; padding: 4px 10px; border-radius: 5px; border: 1px solid transparent; cursor: pointer; color: var(--muted); background: transparent; transition: all 0.15s; }
   .filter-tab:hover { color: var(--text); background: var(--surface2); }
   .filter-tab.active { color: var(--accent-dark); border-color: var(--accent); background: var(--accent-light); }
 
-  .table-row { display: grid; grid-template-columns: 180px 1fr 100px 140px; align-items: center; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.12s; }
+  .table-row { display: grid; grid-template-columns: 180px 90px 90px 56px 100px 150px; align-items: center; gap: 8px; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.12s; }
+  .col-thumb img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; display: block; border: 1px solid var(--border); }
+  .col-thumb .thumb-miss { display: inline-block; width: 48px; height: 48px; border-radius: 6px; background: var(--surface2); color: var(--muted2); font-size: 9px; line-height: 48px; text-align: center; font-family: 'DM Mono', monospace; }
+  .review-btn { padding: 5px 9px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; margin-right: 4px; transition: all 0.15s; line-height: 1; }
+  .review-btn.approve:hover { background: #e8f5e9; border-color: #4caf50; }
+  .review-btn.reject:hover  { background: #ffebee; border-color: #f44336; }
+  .review-btn.approve.selected { background: #4caf50; border-color: #2e7d32; color: white; }
+  .review-btn.reject.selected  { background: #f44336; border-color: #c62828; color: white; }
+  .review-btn:disabled { opacity: 0.6; cursor: wait; }
+  .review-status-hint { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--muted); margin-left: 4px; }
   .table-row:last-child { border-bottom: none; }
   .table-row:hover { background: var(--surface2); }
   .table-row.head { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 24px; background: var(--bg); }
@@ -178,7 +197,7 @@
   .history-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-top: 24px; }
   .history-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); }
   .history-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-  .history-row { display: grid; grid-template-columns: 130px 1fr 60px 60px 60px 70px; align-items: center; padding: 11px 24px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .history-row { display: grid; grid-template-columns: 110px 100px 80px 1fr 46px 46px 46px 54px; align-items: center; gap: 8px; padding: 11px 24px; border-bottom: 1px solid var(--border); font-size: 12px; }
   .history-row:last-child { border-bottom: none; }
   .history-row.head { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--bg); padding: 9px 24px; }
   .history-row:not(.head):hover { background: var(--surface2); }
@@ -211,12 +230,22 @@
   </header>
 
   <div class="input-section">
+    <label class="input-label">내 이름 <span style="color:var(--muted2);font-weight:300">(실행자 기록용 · 한 번만 입력하면 저장됨)</span></label>
+    <div class="url-row">
+      <input class="url-input" id="reviewerInput" type="text" placeholder="예: 김OO" />
+    </div>
+
+    <label class="input-label">캠페인 이름 <span style="color:var(--muted2);font-weight:300">(선택 · 히스토리 구분용)</span></label>
+    <div class="url-row">
+      <input class="url-input" id="campaignInput" type="text" placeholder="예: 자동차샷, 벚꽃셀카, 여름 휴가룩 등" />
+    </div>
+
     <label class="input-label">게시물 URL <span style="color:var(--muted2);font-weight:300">(선택 · 메타 기록용)</span></label>
     <div class="url-row">
       <input class="url-input" id="urlInput" type="text" placeholder="https://www.instagram.com/p/ABC123/" />
     </div>
 
-    <label class="input-label">댓글 파일 <span style="color:var(--muted2);font-weight:300">(xlsx 또는 csv · '아이디' 컬럼 필요)</span></label>
+    <label class="input-label">댓글 파일 <span class="label-required">xlsx 또는 csv · '아이디' 컬럼 필요</span></label>
     <div class="upload-area" id="commentUploadArea" onclick="document.getElementById('commentInput').click()">
       <div class="upload-icon" id="commentUploadIcon">📄</div>
       <div class="upload-text">
@@ -226,11 +255,11 @@
     </div>
     <input type="file" id="commentInput" accept=".xlsx,.csv" onchange="handleCommentFileUpload(event)" />
 
-    <label class="input-label">레퍼런스 이미지 <span style="color:var(--muted2);font-weight:300">(최대 5장 · 다수결 매칭)</span></label>
+    <label class="input-label">레퍼런스 이미지 <span class="label-required">최대 5장 · 다수결 매칭</span></label>
     <div class="ref-images-row" id="refImagesRow"></div>
     <input type="file" id="refFileInput" accept="image/*" onchange="handleRefImageAdd(event)" />
 
-    <label class="input-label" style="margin-top:18px;">원본 AI 프롬프트 텍스트 <span style="color:var(--muted2);font-weight:300">(필수 · 정확도 핵심)</span></label>
+    <label class="input-label" style="margin-top:18px;">원본 AI 프롬프트 텍스트 <span class="label-required">필수 · 정확도 핵심</span></label>
     <textarea class="url-input" id="promptInput" rows="8" placeholder="레퍼런스 이미지를 만든 AI 프롬프트 전문을 붙여넣으세요. 텍스트가 자세할수록 판별 정확도가 올라갑니다 (장면·의상·구도·색감·금지 항목 등)." style="font-family:inherit;line-height:1.5;padding:12px;resize:vertical;min-height:100px;width:100%;box-sizing:border-box;"></textarea>
 
     <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
@@ -262,8 +291,17 @@
 
   <div class="results-section">
     <div class="results-header">
-      <span class="results-title">감지된 UGC</span>
+      <div>
+        <span class="results-title">감지된 UGC</span>
+        <span class="review-progress" id="reviewProgress" style="display:none">
+          <span class="chip total">감지 <b id="rpTotal">0</b></span>
+          <span class="chip approved">✅ 확정 <b id="rpApproved">0</b></span>
+          <span class="chip pending">⏳ 대기 <b id="rpPending">0</b></span>
+          <span class="chip rejected">❌ 제외 <b id="rpRejected">0</b></span>
+        </span>
+      </div>
       <div style="display:flex;align-items:center;gap:10px;">
+        <button class="export-sheets-btn" id="exportSheetsBtn" onclick="exportApprovedToSheets()" style="display:none">→ 확정 <b id="btnApprovedCount">0</b>건 Sheets 저장</button>
         <button class="export-btn" id="exportBtn" onclick="exportToSlides()">↗ Google Slides로 저장</button>
         <div class="filter-tabs">
           <button class="filter-tab active" onclick="filterResults('all', this)">전체</button>
@@ -275,7 +313,7 @@
     </div>
     <div class="results-table">
       <div class="table-row head">
-        <span>유저</span><span>감지 시각</span><span>유형</span><span>링크</span>
+        <span>유저</span><span>감지 시각</span><span>유형</span><span>이미지</span><span>링크</span><span>검수</span>
       </div>
       <div id="resultsBody">
         <div class="empty-state">
@@ -294,7 +332,7 @@
     </div>
     <div id="historyBody">
       <div class="history-row head">
-        <span>날짜</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
+        <span>날짜</span><span>캠페인</span><span>실행자</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
       </div>
     </div>
   </div>
@@ -404,9 +442,14 @@
     }
 
     try {
+      const reviewerName = document.getElementById('reviewerInput').value.trim();
+      if (reviewerName) localStorage.setItem('ugc_reviewer', reviewerName);
+
       const formData = new FormData();
       formData.append('post_url', url);
       formData.append('prompt_text', promptText);
+      formData.append('campaign_name', document.getElementById('campaignInput').value.trim());
+      formData.append('reviewer', reviewerName);
       formData.append('comment_file', commentFile);
       refImages.forEach((file, i) => formData.append(`reference_image_${i + 1}`, file));
 
@@ -510,12 +553,51 @@
     document.getElementById('cardStory').className   = stats.story   ? 'summary-card active-story'   : 'summary-card';
     document.getElementById('cardProfile').className = stats.profile ? 'summary-card active-profile' : 'summary-card';
     applyFilter(currentFilter);
+    updateReviewProgress();
     document.getElementById('statusDot').className = 'dot ready';
     document.getElementById('statusText').textContent = `마지막 스캔: 방금 전 · 총 ${results.length}건`;
     document.getElementById('exportBtn').className = results.length ? 'export-btn visible' : 'export-btn';
     showToast(`UGC ${results.length}건 감지 완료`);
     loadHistory();
   }
+
+  function updateReviewProgress() {
+    const total    = allResults.length;
+    const approved = allResults.filter(r => r.status === 'approved').length;
+    const rejected = allResults.filter(r => r.status === 'rejected').length;
+    const pending  = total - approved - rejected;
+    const wrap = document.getElementById('reviewProgress');
+    if (total > 0) {
+      wrap.style.display = 'inline-flex';
+      document.getElementById('rpTotal').textContent    = total;
+      document.getElementById('rpApproved').textContent = approved;
+      document.getElementById('rpPending').textContent  = pending;
+      document.getElementById('rpRejected').textContent = rejected;
+    } else {
+      wrap.style.display = 'none';
+    }
+    const sheetBtn = document.getElementById('exportSheetsBtn');
+    document.getElementById('btnApprovedCount').textContent = approved;
+    sheetBtn.style.display = approved > 0 ? '' : 'none';
+  }
+
+  window.exportApprovedToSheets = async function() {
+    const btn = document.getElementById('exportSheetsBtn');
+    btn.disabled = true;
+    const prev = btn.innerHTML;
+    btn.innerHTML = '저장 중...';
+    try {
+      const r = await fetch(`${API_BASE}/review/export`, { method: 'POST' });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || 'export 실패');
+      showToast(`확정 ${d.exported}건 Sheets(${d.tab}) 에 저장됨`);
+    } catch (e) {
+      showToast(`Sheets 저장 실패: ${e.message || e}`);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = prev;
+    }
+  };
 
   function applyFilter(type) {
     currentFilter = type;
@@ -531,11 +613,43 @@
           <div class="avatar">${r.username.slice(0,2).toUpperCase()}</div>
           <span class="username">@${r.username}</span>
         </div>
-        <div class="col-detected">오늘 ${r.detected_at}</div>
+        <div class="col-detected">오늘 ${r.detected_at || ''}</div>
         <div><span class="type-badge ${r.type}"><span class="badge-dot"></span>${{feed:'피드',story:'스토리',profile:'프사변경'}[r.type]}</span></div>
+        <div class="col-thumb">${r.image_url ? `<img src="${r.image_url}" onerror="this.outerHTML='<span class=\\'thumb-miss\\'>만료</span>'" alt="">` : '<span class="thumb-miss">없음</span>'}</div>
         <div class="col-link">${r.link ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>` : '<span style="color:var(--muted2);font-size:11px;font-family:\'DM Mono\',monospace">—</span>'}</div>
+        <div class="col-review">
+          <button class="review-btn approve ${r.status === 'approved' ? 'selected' : ''}" onclick="decide('${r.username}','approved',this)" title="맞음">✅</button>
+          <button class="review-btn reject ${r.status === 'rejected' ? 'selected' : ''}" onclick="decide('${r.username}','rejected',this)" title="아님">❌</button>
+        </div>
       </div>`).join('');
   }
+
+  window.decide = async function(username, decision, btn) {
+    const row = btn.closest('.table-row');
+    row.querySelectorAll('.review-btn').forEach(b => b.disabled = true);
+    try {
+      const fd = new FormData();
+      fd.append('username', username);
+      fd.append('decision', decision);
+      const reviewerName = document.getElementById('reviewerInput').value.trim()
+                         || localStorage.getItem('ugc_reviewer') || '';
+      if (reviewerName) {
+        fd.append('reviewer', reviewerName);
+        localStorage.setItem('ugc_reviewer', reviewerName);
+      }
+      const r = await fetch(`${API_BASE}/review/decide`, { method: 'POST', body: fd });
+      if (!r.ok) throw new Error(await r.text());
+      const match = allResults.find(x => x.username === username);
+      if (match) match.status = decision;
+      applyFilter(currentFilter);
+      updateReviewProgress();
+      showToast(`@${username} ${decision === 'approved' ? '승인' : '거절'} 완료`);
+    } catch (e) {
+      console.error('[decide]', e);
+      row.querySelectorAll('.review-btn').forEach(b => b.disabled = false);
+      showToast(`검수 실패: ${e.message || e}`);
+    }
+  };
 
   function filterResults(type, el) {
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
@@ -628,9 +742,9 @@
   // ── 스캔 히스토리 ──────────────────────────────
   async function loadHistory() {
     const DEMO_HISTORY = [
-      { '날짜': '2026-04-15 14:32', '게시물URL': 'https://www.instagram.com/p/ABC123/', '피드': 7, '스토리': 3, '프사': 2, '총계': 12 },
-      { '날짜': '2026-04-12 11:05', '게시물URL': 'https://www.instagram.com/p/DEF456/', '피드': 4, '스토리': 1, '프사': 0, '총계': 5  },
-      { '날짜': '2026-04-10 09:48', '게시물URL': 'https://www.instagram.com/p/GHI789/', '피드': 2, '스토리': 2, '프사': 1, '총계': 5  },
+      { '날짜': '2026-04-15 14:32', '캠페인': '자동차샷',   '게시물URL': 'https://www.instagram.com/p/ABC123/', '피드': 7, '스토리': 3, '프사': 2, '총계': 12 },
+      { '날짜': '2026-04-12 11:05', '캠페인': '벚꽃셀카',   '게시물URL': 'https://www.instagram.com/p/DEF456/', '피드': 4, '스토리': 1, '프사': 0, '총계': 5  },
+      { '날짜': '2026-04-10 09:48', '캠페인': '여름휴가룩', '게시물URL': 'https://www.instagram.com/p/GHI789/', '피드': 2, '스토리': 2, '프사': 1, '총계': 5  },
     ];
     try {
       const resp = await fetch(`${API_BASE}/history`, { signal: AbortSignal.timeout(5000) });
@@ -649,10 +763,12 @@
     if (!rows.length) { sec.style.display = 'none'; return; }
     sec.style.display = 'block';
     body.innerHTML = `<div class="history-row head">
-      <span>날짜</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
+      <span>날짜</span><span>캠페인</span><span>실행자</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
     </div>` + rows.map(r => `
       <div class="history-row">
         <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${r['날짜'] || ''}</span>
+        <span style="font-size:11px;color:var(--text)">${r['캠페인'] || '—'}</span>
+        <span style="font-size:11px;color:var(--muted)">${r['실행자'] || '—'}</span>
         <span class="hist-url">${r['게시물URL'] ? `<a href="${r['게시물URL']}" target="_blank" style="color:var(--accent-dark);text-decoration:none">${r['게시물URL']}</a>` : '—'}</span>
         <span class="hist-num" style="color:var(--accent-dark)">${r['피드'] || 0}</span>
         <span class="hist-num" style="color:#c07840">${r['스토리'] || 0}</span>
@@ -680,6 +796,23 @@
   // 초기 렌더
   renderRefImages();
   loadHistory();
+
+  // localStorage 에서 이름 복원
+  (function() {
+    const saved = localStorage.getItem('ugc_reviewer');
+    if (saved) document.getElementById('reviewerInput').value = saved;
+  })();
+
+  // 서버에 기존 결과가 있으면 카드로 바로 표시
+  (async () => {
+    try {
+      const resp = await fetch(`${API_BASE}/results`);
+      const data = await resp.json();
+      if (data.status === 'done' && (data.results || []).length) {
+        renderResults(data.results, data.stats || {});
+      }
+    } catch (err) { console.error('[init results]', err); }
+  })();
 </script>
 </body>
 </html>
