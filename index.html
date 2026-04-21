@@ -810,19 +810,40 @@
 
   // ── 스캔 히스토리 ──────────────────────────────
   async function loadHistory() {
+    // 데모는 localhost가 아닐 때만 사용 (API 미연결 데모 체험용)
     const DEMO_HISTORY = [
       { '날짜': '2026-04-15 14:32', '캠페인': '자동차샷',   '게시물URL': 'https://www.instagram.com/p/ABC123/', '피드': 7, '스토리': 3, '프사': 2, '총계': 12 },
       { '날짜': '2026-04-12 11:05', '캠페인': '벚꽃셀카',   '게시물URL': 'https://www.instagram.com/p/DEF456/', '피드': 4, '스토리': 1, '프사': 0, '총계': 5  },
       { '날짜': '2026-04-10 09:48', '캠페인': '여름휴가룩', '게시물URL': 'https://www.instagram.com/p/GHI789/', '피드': 2, '스토리': 2, '프사': 1, '총계': 5  },
     ];
+    const isLocal = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
     try {
-      const resp = await fetch(`${API_BASE}/history`, { signal: AbortSignal.timeout(5000) });
+      // Sheets API 호출 포함이라 15초까지 허용 (스캔 직후엔 느려질 수 있음)
+      const resp = await fetch(`${API_BASE}/history`, { signal: AbortSignal.timeout(15000) });
       const data = await resp.json();
       const rows = (data.history || []).slice().reverse();
-      renderHistory(rows.length ? rows : DEMO_HISTORY);
+      if (rows.length) {
+        renderHistory(rows);
+      } else if (isLocal) {
+        // 로컬 실행 + 이력 0건이면 "이력 없음" 표시
+        const sec  = document.getElementById('historySection');
+        const body = document.getElementById('historyBody');
+        sec.style.display = 'block';
+        body.innerHTML = `<div style="padding:20px;text-align:center;color:var(--muted2);font-size:12px;">아직 스캔 이력이 없습니다.</div>`;
+      } else {
+        // 배포 미연결(vercel) — 데모로 UX 보여줌
+        renderHistory(DEMO_HISTORY);
+      }
     } catch (e) {
-      console.warn('히스토리 API 미연결 — 데모 표시');
-      renderHistory(DEMO_HISTORY);
+      console.warn('히스토리 로드 실패', e);
+      if (isLocal) {
+        const sec  = document.getElementById('historySection');
+        const body = document.getElementById('historyBody');
+        sec.style.display = 'block';
+        body.innerHTML = `<div style="padding:20px;text-align:center;color:#c44;font-size:12px;">이력 로드 실패 — 다시 새로고침 해주세요<br><span style="color:var(--muted2);font-size:10px">(${e.message || e})</span></div>`;
+      } else {
+        renderHistory(DEMO_HISTORY);
+      }
     }
   }
 
