@@ -159,7 +159,7 @@
   .filter-tab:hover { color: var(--text); background: var(--surface2); }
   .filter-tab.active { color: var(--accent-dark); border-color: var(--accent); background: var(--accent-light); }
 
-  .table-row { display: grid; grid-template-columns: 180px 90px 90px 56px 100px 150px; align-items: center; gap: 8px; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.12s; }
+  .table-row { display: grid; grid-template-columns: minmax(220px, 1fr) 90px 90px 56px 100px 150px; align-items: center; gap: 8px; padding: 14px 24px; border-bottom: 1px solid var(--border); font-size: 13px; transition: background 0.12s; }
   .col-thumb img { width: 48px; height: 48px; border-radius: 6px; object-fit: cover; display: block; border: 1px solid var(--border); }
   .col-thumb .thumb-miss { display: inline-block; width: 48px; height: 48px; border-radius: 6px; background: var(--surface2); color: var(--muted2); font-size: 9px; line-height: 48px; text-align: center; font-family: 'DM Mono', monospace; }
   .review-btn { padding: 5px 9px; font-size: 13px; border-radius: 6px; border: 1px solid var(--border); background: white; cursor: pointer; margin-right: 4px; transition: all 0.15s; line-height: 1; }
@@ -172,7 +172,8 @@
   .table-row:last-child { border-bottom: none; }
   .table-row:hover { background: var(--surface2); }
   .table-row.head { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); padding: 10px 24px; background: var(--bg); }
-  .col-user { display: flex; align-items: center; gap: 10px; }
+  .col-user { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .col-user .username { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent-light); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'DM Mono', monospace; font-size: 9px; color: var(--accent-dark); flex-shrink: 0; }
   .username { font-weight: 400; font-size: 13px; }
   .col-detected { color: var(--muted); font-size: 12px; }
@@ -657,7 +658,7 @@
       <div class="table-row">
         <div class="col-user">
           <div class="avatar">${r.username.slice(0,2).toUpperCase()}</div>
-          <span class="username">@${r.username}</span>
+          <span class="username" title="@${r.username}">@${r.username}</span>
         </div>
         <div class="col-detected">오늘 ${r.detected_at || ''}</div>
         <div><span class="type-badge ${r.type}"><span class="badge-dot"></span>${{feed:'피드',story:'스토리',profile:'프사변경'}[r.type]}</span></div>
