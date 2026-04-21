@@ -214,6 +214,8 @@
     header { flex-direction: column; gap: 16px; }
   }
 </style>
+  <!-- xlsx 파일 client-side parsing용 (댓글 업로드 시 유니크 N명 즉시 표시) -->
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.mini.min.js"></script>
 </head>
 <body>
 <div class="wrap">
@@ -354,7 +356,32 @@
     const area  = document.getElementById('commentUploadArea');
     area.classList.add('has-image');
     document.getElementById('commentUploadTitle').textContent = file.name;
-    document.getElementById('commentUploadSub').textContent   = `${(file.size/1024).toFixed(0)}KB · 업로드 완료`;
+    const sizeKB = (file.size/1024).toFixed(0);
+    document.getElementById('commentUploadSub').textContent = `${sizeKB}KB · 계산 중...`;
+
+    // 유니크 댓글러 수 즉시 계산해서 피드백
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      try {
+        const wb = XLSX.read(evt.target.result, { type: 'array' });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+        if (!rows.length) throw new Error('빈 파일');
+        const headers = rows[0].map(h => String(h || '').toLowerCase());
+        let idCol = headers.findIndex(h => ['아이디','user','username','id','userid','user_id'].includes(h));
+        if (idCol < 0) idCol = 0;  // fallback: 첫 컬럼
+        const ids = new Set();
+        for (let i = 1; i < rows.length; i++) {
+          const v = String(rows[i][idCol] || '').trim().toLowerCase();
+          if (v) ids.add(v);
+        }
+        document.getElementById('commentUploadSub').textContent = `${sizeKB}KB · 유니크 댓글러 ${ids.size}명 감지`;
+      } catch (err) {
+        console.warn('[xlsx parse]', err);
+        document.getElementById('commentUploadSub').textContent = `${sizeKB}KB · 업로드 완료 (미리보기 실패)`;
+      }
+    };
+    reader.readAsArrayBuffer(file);
   }
 
   // ← Render 배포 후 실제 URL로 교체
@@ -490,6 +517,13 @@
         }
         clearInterval(pollTimer);
         renderResults(data.results || [], data.stats || {});
+        // 완료 피드백 — 결과 섹션으로 스크롤 + 토스트
+        const matchCount = (data.results || []).length;
+        showToast(matchCount > 0 ? `스캔 완료! ${matchCount}건 감지됨 (아래에서 검수)` : '스캔 완료 — 감지된 UGC 없음');
+        setTimeout(() => {
+          const resSec = document.querySelector('.results-section') || document.querySelector('.summary-grid');
+          if (resSec) resSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
       } else if (data.status === 'error') {
         clearInterval(pollTimer);
         showToast('스캔 중 오류가 발생했습니다.');
@@ -615,7 +649,9 @@
         </div>
         <div class="col-detected">오늘 ${r.detected_at || ''}</div>
         <div><span class="type-badge ${r.type}"><span class="badge-dot"></span>${{feed:'피드',story:'스토리',profile:'프사변경'}[r.type]}</span></div>
-        <div class="col-thumb">${r.image_url ? `<img src="${r.image_url}" onerror="this.outerHTML='<span class=\\'thumb-miss\\'>만료</span>'" alt="">` : '<span class="thumb-miss">없음</span>'}</div>
+        <div class="col-thumb">${r.image_url
+          ? `<img src="${r.image_url}" onerror="this.outerHTML='<a href=\\'https://www.instagram.com/${r.username}/\\' target=\\'_blank\\' class=\\'thumb-miss\\' title=\\'CDN 만료 — 프로필에서 직접 확인\\'>만료 ↗</a>'" alt="">`
+          : `<a href="https://www.instagram.com/${r.username}/" target="_blank" class="thumb-miss" title="이미지 URL 없음 — 프로필에서 직접 확인">없음 ↗</a>`}</div>
         <div class="col-link">${r.link
           ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>`
           : `<a href="https://www.instagram.com/${r.username}/" target="_blank" style="color:var(--muted)">프로필 보기 →</a>`}</div>
