@@ -270,6 +270,10 @@ def main():
                         help="원본 AI 프롬프트 텍스트 파일 (하이브리드 판별용)")
     parser.add_argument("--skip-stories", action="store_true",
                         help="스토리 이미지 검사 생략 (피드+프사만)")
+    parser.add_argument("--fresh", action="store_true",
+                        help="기존 결과 파일 무시하고 처음부터 재판별 (variant 실험용)")
+    parser.add_argument("--output", type=str, default=None,
+                        help="결과 저장 파일명 (기본: phase3_results.json). variant별 따로 저장 시 지정")
     args = parser.parse_args()
 
     # 프롬프트 텍스트 로드 (없으면 빈 문자열 → 이미지만으로 비교)
@@ -318,32 +322,41 @@ def main():
     print(f"\n판별 대상: {len(candidates)}명")
     print("─" * 55)
 
+    # 결과/실패 파일 경로 (--output 옵션으로 오버라이드 가능)
+    results_file  = args.output or RESULTS_FILE
+    failures_file = (args.output.replace(".json", "_failures.json")
+                     if args.output else FAILURES_FILE)
+
     # ── Resume: 기존 결과/실패 기록 로드 → 처리한 사용자는 스킵
+    #            --fresh 플래그 있으면 기존 파일 무시
     confirmed_ugc = []
     results_log   = []
     failures      = []
     processed_usernames: set[str] = set()
 
-    if os.path.exists(RESULTS_FILE):
-        try:
-            with open(RESULTS_FILE, encoding="utf-8") as f:
-                data = json.load(f)
-            results_log    = data.get("all_results", [])
-            confirmed_ugc  = data.get("confirmed_ugc", [])
-            processed_usernames |= {r["username"] for r in results_log}
-            print(f"  ↩ Resume: {len(results_log)}명 이전 결과 로드 (그 중 매치 {len(confirmed_ugc)}명)")
-        except Exception as e:
-            print(f"  ⚠️  {RESULTS_FILE} 로드 실패, 새로 시작: {e}")
+    if args.fresh:
+        print(f"  🔄 --fresh 모드: 기존 결과 무시, 처음부터 재판별")
+    else:
+        if os.path.exists(results_file):
+            try:
+                with open(results_file, encoding="utf-8") as f:
+                    data = json.load(f)
+                results_log    = data.get("all_results", [])
+                confirmed_ugc  = data.get("confirmed_ugc", [])
+                processed_usernames |= {r["username"] for r in results_log}
+                print(f"  ↩ Resume: {len(results_log)}명 이전 결과 로드 (그 중 매치 {len(confirmed_ugc)}명)")
+            except Exception as e:
+                print(f"  ⚠️  {results_file} 로드 실패, 새로 시작: {e}")
 
-    if os.path.exists(FAILURES_FILE):
-        try:
-            with open(FAILURES_FILE, encoding="utf-8") as f:
-                failures = json.load(f)
-            failed_usernames = {x["username"] for x in failures}
-            processed_usernames |= failed_usernames
-            print(f"  ⚠ 실패 기록: {len(failures)}명 (이번엔 스킵 — 별도 재시도 가능)")
-        except Exception as e:
-            print(f"  ⚠️  {FAILURES_FILE} 로드 실패: {e}")
+        if os.path.exists(failures_file):
+            try:
+                with open(failures_file, encoding="utf-8") as f:
+                    failures = json.load(f)
+                failed_usernames = {x["username"] for x in failures}
+                processed_usernames |= failed_usernames
+                print(f"  ⚠ 실패 기록: {len(failures)}명 (이번엔 스킵 — 별도 재시도 가능)")
+            except Exception as e:
+                print(f"  ⚠️  {failures_file} 로드 실패: {e}")
 
     remaining = [u for u in candidates if u.get("username") not in processed_usernames]
     print(f"  처리 대상: {len(remaining)}명 (전체 {len(candidates)}명 중)")
@@ -358,10 +371,10 @@ def main():
 
     def save_state():
         with save_lock:
-            with open(RESULTS_FILE, "w", encoding="utf-8") as f:
+            with open(results_file, "w", encoding="utf-8") as f:
                 json.dump({"confirmed_ugc": confirmed_ugc, "all_results": results_log},
                           f, ensure_ascii=False, indent=2)
-            with open(FAILURES_FILE, "w", encoding="utf-8") as f:
+            with open(failures_file, "w", encoding="utf-8") as f:
                 json.dump(failures, f, ensure_ascii=False, indent=2)
 
     def process_user(user):
@@ -472,9 +485,9 @@ def main():
     else:
         print(f"\n  이번 스캔에서 UGC가 확인되지 않았습니다.")
 
-    print(f"\n  결과 저장: {RESULTS_FILE}")
+    print(f"\n  결과 저장: {results_file}")
     if failures:
-        print(f"  실패 저장: {FAILURES_FILE} (재시도 시 별도 처리 필요)")
+        print(f"  실패 저장: {failures_file} (재시도 시 별도 처리 필요)")
     print(f"{'='*55}")
 
 
