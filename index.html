@@ -616,7 +616,9 @@
         <div class="col-detected">오늘 ${r.detected_at || ''}</div>
         <div><span class="type-badge ${r.type}"><span class="badge-dot"></span>${{feed:'피드',story:'스토리',profile:'프사변경'}[r.type]}</span></div>
         <div class="col-thumb">${r.image_url ? `<img src="${r.image_url}" onerror="this.outerHTML='<span class=\\'thumb-miss\\'>만료</span>'" alt="">` : '<span class="thumb-miss">없음</span>'}</div>
-        <div class="col-link">${r.link ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>` : '<span style="color:var(--muted2);font-size:11px;font-family:\'DM Mono\',monospace">—</span>'}</div>
+        <div class="col-link">${r.link
+          ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>`
+          : `<a href="https://www.instagram.com/${r.username}/" target="_blank" style="color:var(--muted)">프로필 보기 →</a>`}</div>
         <div class="col-review">
           <button class="review-btn approve ${r.status === 'approved' ? 'selected' : ''}" onclick="decide('${r.username}','approved',this)" title="맞음">✅</button>
           <button class="review-btn reject ${r.status === 'rejected' ? 'selected' : ''}" onclick="decide('${r.username}','rejected',this)" title="아님">❌</button>
