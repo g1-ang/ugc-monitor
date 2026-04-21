@@ -291,6 +291,13 @@
     </div>
   </div>
 
+  <div id="usageRow" style="display:none; margin: -12px 0 24px 0; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace;">
+    <span style="margin-right:16px;">💰 <b id="usageTotal">$0.00</b></span>
+    <span style="margin-right:16px;">Apify <b id="usageApify">$0.00</b></span>
+    <span style="margin-right:16px;">Gemini <b id="usageGemini">$0.00</b></span>
+    <span style="color: var(--muted2)">(<span id="usageCalls">0</span>회 · in <span id="usageInTok">0</span> + out <span id="usageOutTok">0</span> tokens)</span>
+  </div>
+
   <div class="results-section">
     <div class="results-header">
       <div>
@@ -507,6 +514,7 @@
       console.log('[poll]', data.status, data.progress, data.step);
 
       setProgress(data.progress || 0, data.step || '');
+      updateUsage(data.usage);
 
       if (data.status === 'done') {
         // 서버의 started_at이 현재 스캔보다 오래된 경우 무시 (cold start 레이스 컨디션 방어)
@@ -519,7 +527,11 @@
         renderResults(data.results || [], data.stats || {});
         // 완료 피드백 — 결과 섹션으로 스크롤 + 토스트
         const matchCount = (data.results || []).length;
-        showToast(matchCount > 0 ? `스캔 완료! ${matchCount}건 감지됨 (아래에서 검수)` : '스캔 완료 — 감지된 UGC 없음');
+        const totalCost  = ((data.usage || {}).total_estimated_usd || 0).toFixed(2);
+        const costStr    = parseFloat(totalCost) > 0 ? ` · 비용 ≈ $${totalCost}` : '';
+        showToast(matchCount > 0
+          ? `스캔 완료! ${matchCount}건 감지됨${costStr} (아래에서 검수)`
+          : `스캔 완료 — 감지된 UGC 없음${costStr}`);
         setTimeout(() => {
           const resSec = document.querySelector('.results-section') || document.querySelector('.summary-grid');
           if (resSec) resSec.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -693,6 +705,25 @@
     document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
     el.classList.add('active');
     applyFilter(type);
+  }
+
+  function updateUsage(u) {
+    if (!u) return;
+    const apify  = (u.apify_usd || 0).toFixed(2);
+    const gemini = (u.gemini_estimated_usd || 0).toFixed(2);
+    const total  = (u.total_estimated_usd  || (u.apify_usd || 0) + (u.gemini_estimated_usd || 0)).toFixed(2);
+    const calls  = u.gemini_api_calls || 0;
+    const inTok  = (u.gemini_input_tokens  || 0).toLocaleString();
+    const outTok = (u.gemini_output_tokens || 0).toLocaleString();
+    document.getElementById('usageTotal').textContent  = `$${total}`;
+    document.getElementById('usageApify').textContent  = `$${apify}`;
+    document.getElementById('usageGemini').textContent = `$${gemini}`;
+    document.getElementById('usageCalls').textContent  = calls;
+    document.getElementById('usageInTok').textContent  = inTok;
+    document.getElementById('usageOutTok').textContent = outTok;
+    if (calls > 0 || (u.apify_usd || 0) > 0) {
+      document.getElementById('usageRow').style.display = '';
+    }
   }
 
   function setRunning(on) {
