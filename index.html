@@ -263,7 +263,12 @@
     <input type="file" id="refFileInput" accept="image/*" onchange="handleRefImageAdd(event)" />
 
     <label class="input-label" style="margin-top:18px;">원본 AI 프롬프트 텍스트 <span class="label-required">필수 · 정확도 핵심</span></label>
-    <textarea class="url-input" id="promptInput" rows="8" placeholder="레퍼런스 이미지를 만든 AI 프롬프트 전문을 붙여넣으세요. 텍스트가 자세할수록 판별 정확도가 올라갑니다 (장면·의상·구도·색감·금지 항목 등)." style="font-family:inherit;line-height:1.5;padding:12px;resize:vertical;min-height:100px;width:100%;box-sizing:border-box;"></textarea>
+    <textarea class="url-input" id="promptInput" rows="8" placeholder="레퍼런스 이미지를 만든 AI 프롬프트 전문을 붙여넣으세요. 텍스트가 자세할수록 판별 정확도가 올라갑니다 (장면·의상·구도·색감·금지 항목 등)." style="font-family:inherit;line-height:1.5;padding:12px;resize:vertical;min-height:100px;width:100%;box-sizing:border-box;" oninput="checkPromptFormatConstraints()"></textarea>
+    <div id="promptFormatWarning" style="display:none; margin-top:8px; padding:10px 14px; background:#fff4e1; border:1px solid #e6c583; border-radius:8px; font-size:12px; line-height:1.6; color:#946300;">
+      <b>⚠️ 이미지 구도/format 관련 문구 감지됨:</b> <span id="promptFormatKeywords" style="font-family:'DM Mono',monospace;"></span><br>
+      유저가 원본과 다른 format(예: 2-분할을 1-분할로 올림)으로 올려도 잡히도록 <b>자동 완화 판별 (2-pass)</b>이 적용됩니다.
+      잘 안 잡히면 이 문구를 삭제/수정해주세요.
+    </div>
 
     <button class="run-btn" id="runBtn" onclick="startScan()">수집 시작</button>
     <div class="input-hint">댓글 파일 · 레퍼런스 이미지 · 프롬프트 텍스트를 모두 입력해야 수집이 시작돼요.</div>
@@ -859,6 +864,24 @@
   }
 
   function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+  const FORMAT_CONSTRAINT_KEYWORDS = [
+    "2-분할","2분할","2 분할","2컷","2 컷",
+    "상/하","상/하단","상·하","상하 분할","상단 컷","하단 컷",
+    "콜라주","듀얼","듀얼컷","diptych","dual","split","two-panel",
+    "좌/우","좌우 분할","3-분할","4-분할","n-분할",
+  ];
+  window.checkPromptFormatConstraints = function() {
+    const txt  = document.getElementById('promptInput').value;
+    const hits = FORMAT_CONSTRAINT_KEYWORDS.filter(k => txt.includes(k));
+    const wrap = document.getElementById('promptFormatWarning');
+    if (hits.length) {
+      document.getElementById('promptFormatKeywords').textContent = hits.join(", ");
+      wrap.style.display = 'block';
+    } else {
+      wrap.style.display = 'none';
+    }
+  };
 
   // 초기 렌더
   renderRefImages();
