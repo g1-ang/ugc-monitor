@@ -2,19 +2,19 @@
   "campaign": "식빵샷",
   "reviewer": "전지원",
   "post_url": "https://www.instagram.com/p/DXbRZ04ExVC/",
-  "finished_at": "2026-04-23T15:47:16.267242",
-  "commenters": 124,
-  "candidates": 124,
+  "finished_at": "2026-04-23T17:19:47.480284",
+  "commenters": 126,
+  "candidates": 126,
   "phase3_stats": {
     "profile": {
-      "scanned": 124,
+      "scanned": 126,
       "yes": 1,
-      "no": 123
+      "no": 125
     },
     "feed": {
-      "scanned": 85,
+      "scanned": 82,
       "yes": 3,
-      "no": 82
+      "no": 79
     },
     "story": {
       "scanned": 0,
@@ -24,9 +24,9 @@
     }
   },
   "confirmed": {
-    "feed": 2,
+    "feed": 3,
     "story": 0,
     "profile": 1,
-    "total": 3
+    "total": 4
   }
 }
