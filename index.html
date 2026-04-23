@@ -350,6 +350,20 @@
       </div>
     </div>
   </div>
+
+  <div class="history-section" id="cumulativeSection" style="display:none;">
+    <div class="history-header" style="gap:12px; align-items:center;">
+      <span class="history-title">캠페인별 누적 확정</span>
+      <select id="cumulativeSelect" onchange="loadCumulative()" style="font-family:inherit; font-size:12px; padding:6px 10px; border:1px solid var(--border); border-radius:6px; background:white;"></select>
+      <span id="cumulativeStats" style="font-family:'DM Mono',monospace; font-size:11px; color:var(--muted);"></span>
+      <button onclick="loadCumulativeList()" style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);background:none;border:none;cursor:pointer; margin-left:auto;">↺ 새로고침</button>
+    </div>
+    <div id="cumulativeBody">
+      <div class="history-row head" style="grid-template-columns: 180px 80px 1fr 120px 140px;">
+        <span>유저</span><span>유형</span><span>링크</span><span>승인자</span><span>최근 승인</span>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -641,6 +655,7 @@
       const d = await r.json();
       if (!r.ok) throw new Error(d.error || 'export 실패');
       showToast(`확정 ${d.exported}건 Sheets(${d.tab}) 에 저장됨`);
+      loadCumulativeList();  // 누적 뷰 갱신
     } catch (e) {
       showToast(`Sheets 저장 실패: ${e.message || e}`);
     } finally {
@@ -885,9 +900,59 @@
     }
   };
 
+  // ── 캠페인별 누적 뷰 ──────────────────────────
+  async function loadCumulativeList() {
+    try {
+      const r = await fetch(`${API_BASE}/campaign/cumulative`);
+      const d = await r.json();
+      const sel = document.getElementById('cumulativeSelect');
+      const camps = d.campaigns || [];
+      if (!camps.length) {
+        document.getElementById('cumulativeSection').style.display = 'none';
+        return;
+      }
+      document.getElementById('cumulativeSection').style.display = 'block';
+      const current = sel.value;
+      sel.innerHTML = camps.map(c => `<option value="${c}">${c}</option>`).join('');
+      sel.value = camps.includes(current) ? current : camps[0];
+      await loadCumulative();
+    } catch (e) { console.warn('[cumulative list]', e); }
+  }
+
+  window.loadCumulative = async function() {
+    const campaign = document.getElementById('cumulativeSelect').value;
+    if (!campaign) return;
+    try {
+      const r = await fetch(`${API_BASE}/campaign/cumulative?campaign=${encodeURIComponent(campaign)}`);
+      const d = await r.json();
+      const s = d.stats || {};
+      document.getElementById('cumulativeStats').textContent =
+        `총 ${s.total || 0}명 · 피드 ${s.feed || 0} · 스토리 ${s.story || 0} · 프사 ${s.profile || 0}`;
+      const body = document.getElementById('cumulativeBody');
+      const users = d.users || [];
+      if (!users.length) {
+        body.innerHTML = `<div class="history-row head" style="grid-template-columns: 180px 80px 1fr 120px 140px;">
+          <span>유저</span><span>유형</span><span>링크</span><span>승인자</span><span>최근 승인</span>
+        </div><div style="padding:24px;text-align:center;color:var(--muted);font-size:12px;">아직 이 캠페인에 승인된 유저가 없습니다.</div>`;
+        return;
+      }
+      body.innerHTML = `<div class="history-row head" style="grid-template-columns: 180px 80px 1fr 120px 140px;">
+        <span>유저</span><span>유형</span><span>링크</span><span>승인자</span><span>최근 승인</span>
+      </div>` + users.map(u => `
+        <div class="history-row" style="grid-template-columns: 180px 80px 1fr 120px 140px;">
+          <span style="font-size:12px;color:var(--text);">@${u.username}</span>
+          <span><span class="type-badge ${u.type}" style="font-size:10px;"><span class="badge-dot"></span>${{feed:'피드',story:'스토리',profile:'프사변경'}[u.type]||u.type}</span></span>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${u.link ? `<a href="${u.link}" target="_blank" style="color:var(--accent-dark);text-decoration:none">${u.link}</a>` : '—'}</span>
+          <span style="font-size:11px;color:var(--muted);">${u.reviewer || '—'}</span>
+          <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);">${(u.timestamp || '').slice(0,16).replace('T',' ')}</span>
+        </div>`).join('');
+    } catch (e) { console.warn('[cumulative load]', e); }
+  };
+
   // 초기 렌더
   renderRefImages();
   loadHistory();
+  loadCumulativeList();
 
   // localStorage 에서 이름 복원
   (function() {
