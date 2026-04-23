@@ -672,18 +672,19 @@
           ? `<a href="${r.link}" target="_blank">게시물 보기 →</a>`
           : `<a href="https://www.instagram.com/${r.username}/" target="_blank" style="color:var(--muted)">프로필 보기 →</a>`}</div>
         <div class="col-review">
-          <button class="review-btn approve ${r.status === 'approved' ? 'selected' : ''}" onclick="decide('${r.username}','approved',this)" title="맞음">✅</button>
-          <button class="review-btn reject ${r.status === 'rejected' ? 'selected' : ''}" onclick="decide('${r.username}','rejected',this)" title="아님">❌</button>
+          <button class="review-btn approve ${r.status === 'approved' ? 'selected' : ''}" onclick="decide('${r.username}','${r.type}','approved',this)" title="맞음">✅</button>
+          <button class="review-btn reject ${r.status === 'rejected' ? 'selected' : ''}" onclick="decide('${r.username}','${r.type}','rejected',this)" title="아님">❌</button>
         </div>
       </div>`).join('');
   }
 
-  window.decide = async function(username, decision, btn) {
+  window.decide = async function(username, type, decision, btn) {
     const row = btn.closest('.table-row');
     row.querySelectorAll('.review-btn').forEach(b => b.disabled = true);
     try {
       const fd = new FormData();
       fd.append('username', username);
+      fd.append('type', type);
       fd.append('decision', decision);
       const reviewerName = document.getElementById('reviewerInput').value.trim()
                          || localStorage.getItem('ugc_reviewer') || '';
@@ -693,11 +694,12 @@
       }
       const r = await fetch(`${API_BASE}/review/decide`, { method: 'POST', body: fd });
       if (!r.ok) throw new Error(await r.text());
-      const match = allResults.find(x => x.username === username);
+      // (username, type) 조합으로 매치 찾기 — 같은 유저 여러 타입 있을 수 있음
+      const match = allResults.find(x => x.username === username && x.type === type);
       if (match) match.status = decision;
       applyFilter(currentFilter);
       updateReviewProgress();
-      showToast(`@${username} ${decision === 'approved' ? '승인' : '거절'} 완료`);
+      showToast(`@${username} (${type}) ${decision === 'approved' ? '승인' : '거절'} 완료`);
     } catch (e) {
       console.error('[decide]', e);
       row.querySelectorAll('.review-btn').forEach(b => b.disabled = false);
