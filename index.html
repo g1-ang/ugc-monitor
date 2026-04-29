@@ -273,10 +273,11 @@
     <label style="display:flex; align-items:flex-start; gap:8px; margin-top:14px; padding:10px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:12px; line-height:1.5; cursor:pointer;">
       <input type="checkbox" id="lenientMode" style="margin-top:2px; cursor:pointer;">
       <span>
-        <b>관대 모드</b> <span style="color:var(--muted2)">(변형/유지형 프롬프트용)</span><br>
+        <b>관대 모드</b> <span style="color:var(--muted2)">(변형/유지형 프롬프트용 · 피드에만 적용)</span><br>
         <span style="color:var(--muted); font-size:11px;">
           프롬프트가 "유저 인풋 사진의 헤어/의상/얼굴은 그대로, 일부 요소만 변형" 형식이면 체크.<br>
-          → 핵심 시그니처(소품·포즈·색감)만 매치되면 YES 판정 (헤어/의상 차이 무시)
+          → <b>피드</b> 판별 시 핵심 시그니처(소품·포즈·색감)만 매치되면 YES (헤어/의상 차이 무시)<br>
+          → <b>프사/스토리</b>는 일반 모드 유지 (저해상도라 false positive 위험)
         </span>
       </span>
     </label>
