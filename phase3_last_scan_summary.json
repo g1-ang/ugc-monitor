@@ -1,20 +1,20 @@
 {
-  "campaign": "식빵샷",
+  "campaign": "디카샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DXbRZ04ExVC/",
-  "finished_at": "2026-04-23T17:19:47.480284",
-  "commenters": 126,
-  "candidates": 126,
+  "post_url": "https://www.instagram.com/p/DXggsHmE7xG/",
+  "finished_at": "2026-04-29T12:13:44.998725",
+  "commenters": 317,
+  "candidates": 316,
   "phase3_stats": {
     "profile": {
-      "scanned": 126,
-      "yes": 1,
-      "no": 125
+      "scanned": 316,
+      "yes": 6,
+      "no": 310
     },
     "feed": {
-      "scanned": 82,
-      "yes": 3,
-      "no": 79
+      "scanned": 173,
+      "yes": 2,
+      "no": 171
     },
     "story": {
       "scanned": 0,
@@ -24,9 +24,9 @@
     }
   },
   "confirmed": {
-    "feed": 3,
+    "feed": 2,
     "story": 0,
-    "profile": 1,
-    "total": 4
+    "profile": 6,
+    "total": 8
   }
 }
