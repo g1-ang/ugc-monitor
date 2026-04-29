@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.pitapat.ugcmonitor</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/user/Desktop/claude code/ai prompt ugc monitoring/scripts/auto_scan_daily.sh</string>
+    </array>
+
+    <!-- 매일 오전 9시 실행 (월~일) -->
+    <key>StartCalendarInterval</key>
+    <array>
+        <dict>
+            <key>Hour</key>
+            <integer>9</integer>
+            <key>Minute</key>
+            <integer>0</integer>
+        </dict>
+    </array>
+
+    <!-- 또는 토/일만: Weekday 6 (토), 0 (일) 추가 -->
+
+    <key>StandardOutPath</key>
+    <string>/tmp/ugc_auto_scan_stdout.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/ugc_auto_scan_stderr.log</string>
+
+    <key>RunAtLoad</key>
+    <false/>
+</dict>
+</plist>
