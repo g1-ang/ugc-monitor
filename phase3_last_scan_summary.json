@@ -2,19 +2,19 @@
   "campaign": "버스 모리걸샷",
   "reviewer": "전지원",
   "post_url": "https://www.instagram.com/p/DYZFLcoTZBG/",
-  "finished_at": "2026-05-18T14:34:39.610054",
-  "commenters": 552,
-  "candidates": 552,
+  "finished_at": "2026-05-18T18:32:13.641489",
+  "commenters": 559,
+  "candidates": 559,
   "phase3_stats": {
     "profile": {
-      "scanned": 552,
-      "yes": 6,
-      "no": 546
+      "scanned": 559,
+      "yes": 8,
+      "no": 551
     },
     "feed": {
-      "scanned": 1087,
+      "scanned": 1071,
       "yes": 16,
-      "no": 1071
+      "no": 1055
     },
     "story": {
       "scanned": 0,
@@ -26,7 +26,7 @@
   "confirmed": {
     "feed": 16,
     "story": 0,
-    "profile": 6,
-    "total": 22
+    "profile": 8,
+    "total": 24
   }
 }
