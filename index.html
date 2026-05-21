@@ -282,6 +282,18 @@
       </span>
     </label>
 
+    <div style="margin-top:14px; padding:12px 14px; background:var(--surface2); border:1px solid var(--border); border-radius:8px; font-size:12px; line-height:1.7;">
+      <div style="font-weight:600; color:var(--text); margin-bottom:6px;">📋 수집 기준 안내</div>
+      <div style="color:var(--muted); font-size:11px;">
+        <b style="color:var(--text)">피드</b> · 핀 제외 <b>최신 게시물 3개</b>까지 · 게시물당 <b>최대 20장</b>(캐러셀) · 유저당 누적 <b>20장 cap</b><br>
+        <b style="color:var(--text)">스토리</b> · <b>활성 스토리(24h 이내) 전부</b> · 캡 없음 · 공개 스토리 보유 유저만<br>
+        <b style="color:var(--text)">프사</b> · 프로필 사진 1장
+      </div>
+      <div style="color:var(--muted2); font-size:10px; margin-top:6px;">
+        ※ 카드뉴스/팬싸 캐러셀 등 20장 초과 게시물은 첫 20장만 판별됩니다.
+      </div>
+    </div>
+
     <button class="run-btn" id="runBtn" onclick="startScan()" style="margin-top:14px;">수집 시작</button>
     <div class="input-hint">댓글 파일 · 레퍼런스 이미지 · 프롬프트 텍스트를 모두 입력해야 수집이 시작돼요.</div>
     <div class="progress-bar-wrap" id="progressWrap"><div class="progress-bar" id="progressBar"></div></div>
@@ -1002,12 +1014,21 @@
     if (saved) document.getElementById('reviewerInput').value = saved;
   })();
 
-  // 서버에 기존 결과가 있으면 카드로 바로 표시
+  // 서버에 기존 결과가 있으면 카드로 표시, 진행 중이면 폴링 재개
   (async () => {
     try {
       const resp = await fetch(`${API_BASE}/results`);
       const data = await resp.json();
-      if (data.status === 'done' && (data.results || []).length) {
+      if (data.status === 'running') {
+        // 새로고침 했을 때 기존 스캔 추적 재개
+        setRunning(true);
+        // started_at 기준으로 scanStartedAt 세팅 — 폴링이 stale 무시 로직에 안 걸리도록 과거값 사용
+        scanStartedAt = data.started_at ? new Date(data.started_at).getTime() : Date.now();
+        setProgress(data.progress || 0, data.step || '진행 중...');
+        if (pollTimer) clearInterval(pollTimer);
+        pollTimer = setInterval(pollResults, 3000);
+        showToast('기존 스캔 진행 상태를 복원했어요');
+      } else if (data.status === 'done' && (data.results || []).length) {
         renderResults(data.results, data.stats || {});
       }
     } catch (err) { console.error('[init results]', err); }

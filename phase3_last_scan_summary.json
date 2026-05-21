@@ -1,32 +1,32 @@
 {
-  "campaign": "디카샷",
+  "campaign": "바다 인생샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DXggsHmE7xG/",
-  "finished_at": "2026-04-29T12:13:44.998725",
-  "commenters": 317,
-  "candidates": 316,
+  "post_url": "https://www.instagram.com/p/DYeRZAHTNrb/",
+  "finished_at": "2026-05-20T17:43:24.076604",
+  "commenters": 746,
+  "candidates": 742,
   "phase3_stats": {
     "profile": {
-      "scanned": 316,
-      "yes": 6,
-      "no": 310
+      "scanned": 742,
+      "yes": 7,
+      "no": 735
     },
     "feed": {
-      "scanned": 173,
-      "yes": 2,
-      "no": 171
+      "scanned": 1708,
+      "yes": 9,
+      "no": 1699
     },
     "story": {
-      "scanned": 0,
+      "scanned": 195,
       "yes": 0,
-      "no": 0,
+      "no": 195,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 2,
+    "feed": 9,
     "story": 0,
-    "profile": 6,
-    "total": 8
+    "profile": 7,
+    "total": 16
   }
 }
