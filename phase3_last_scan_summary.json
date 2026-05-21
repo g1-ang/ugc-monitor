@@ -1,32 +1,32 @@
 {
-  "campaign": "바다 인생샷",
+  "campaign": "사꾸 이어폰샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DYeRZAHTNrb/",
-  "finished_at": "2026-05-20T17:43:24.076604",
-  "commenters": 746,
-  "candidates": 742,
+  "post_url": "https://www.instagram.com/p/DYjfA8ClLp1/",
+  "finished_at": "2026-05-21T18:36:51.905207",
+  "commenters": 128,
+  "candidates": 128,
   "phase3_stats": {
     "profile": {
-      "scanned": 742,
-      "yes": 7,
-      "no": 735
+      "scanned": 128,
+      "yes": 3,
+      "no": 125
     },
     "feed": {
-      "scanned": 1708,
-      "yes": 9,
-      "no": 1699
+      "scanned": 436,
+      "yes": 7,
+      "no": 429
     },
     "story": {
-      "scanned": 195,
-      "yes": 0,
-      "no": 195,
+      "scanned": 47,
+      "yes": 3,
+      "no": 44,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 9,
-    "story": 0,
-    "profile": 7,
-    "total": 16
+    "feed": 7,
+    "story": 3,
+    "profile": 3,
+    "total": 13
   }
 }
