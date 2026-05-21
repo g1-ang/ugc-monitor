@@ -1,32 +1,32 @@
 {
-  "campaign": "사꾸 이어폰샷",
+  "campaign": "메론소다샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DYjfA8ClLp1/",
-  "finished_at": "2026-05-21T18:36:51.905207",
-  "commenters": 128,
-  "candidates": 128,
+  "post_url": "https://www.instagram.com/p/DYmFv7qFKZB/",
+  "finished_at": "2026-05-21T21:12:03.234594",
+  "commenters": 230,
+  "candidates": 230,
   "phase3_stats": {
     "profile": {
-      "scanned": 128,
-      "yes": 3,
-      "no": 125
+      "scanned": 230,
+      "yes": 1,
+      "no": 229
     },
     "feed": {
-      "scanned": 436,
-      "yes": 7,
-      "no": 429
+      "scanned": 671,
+      "yes": 4,
+      "no": 667
     },
     "story": {
-      "scanned": 47,
-      "yes": 3,
-      "no": 44,
+      "scanned": 112,
+      "yes": 4,
+      "no": 108,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 7,
-    "story": 3,
-    "profile": 3,
-    "total": 13
+    "feed": 4,
+    "story": 4,
+    "profile": 1,
+    "total": 9
   }
 }
