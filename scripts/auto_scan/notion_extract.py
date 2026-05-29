@@ -75,8 +75,29 @@ def _image_url(block: dict) -> Optional[str]:
     return None
 
 
+def _collect_column_list_images(block_id: str) -> list[str]:
+    """column_list 블록의 모든 자식 column → 그 안의 image 블록 URL 수집."""
+    urls = []
+    columns = _get_children(block_id)
+    for col in columns:
+        if col.get("type") != "column":
+            continue
+        col_children = _get_children(col["id"])
+        for c in col_children:
+            if c.get("type") == "image":
+                u = _image_url(c)
+                if u:
+                    urls.append(u)
+    return urls
+
+
 def fetch_campaign(page_url_or_id: str, download_images: bool = True) -> dict:
-    """캠페인 노션 페이지 → 프롬프트 + 이미지 추출.
+    """캠페인 노션 페이지 → 프롬프트 + 레퍼런스 이미지 추출.
+
+    규칙:
+    - 프롬프트: 가장 긴 code 블록의 내용
+    - 레퍼런스 이미지: **column_list 안의 image 블록만** (3컬럼 그리드 규약)
+      → callout / toggle 안의 이미지 (가이드, 채팅 스샷 등)는 자동 제외
 
     반환: {
       "page_id":  "...",
@@ -108,10 +129,9 @@ def fetch_campaign(page_url_or_id: str, download_images: bool = True) -> dict:
             txt = _block_text(b.get("code", {}).get("rich_text", []))
             if len(txt) > len(prompt_text):  # 가장 긴 code 블록 채택
                 prompt_text = txt
-        elif t == "image":
-            u = _image_url(b)
-            if u:
-                image_urls.append(u)
+        elif t == "column_list":
+            # column_list 안의 image만 레퍼런스로 인정
+            image_urls.extend(_collect_column_list_images(b["id"]))
 
     result = {
         "page_id": page_id,
