@@ -198,7 +198,16 @@
   .history-section { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.04); margin-top: 24px; }
   .history-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 24px; border-bottom: 1px solid var(--border); }
   .history-title { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
-  .history-row { display: grid; grid-template-columns: 110px 100px 80px 1fr 46px 46px 46px 54px; align-items: center; gap: 8px; padding: 11px 24px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .history-row { display: grid; grid-template-columns: 110px 100px 80px 1fr 130px 70px; align-items: center; gap: 8px; padding: 11px 24px; border-bottom: 1px solid var(--border); font-size: 12px; }
+  .hist-detect { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted); }
+  .hist-detect .d-feed { color: var(--accent-dark); }
+  .hist-detect .d-story { color: #c07840; }
+  .hist-detect .d-profile { color: #4878b8; }
+  .hist-detect .d-sep { color: var(--muted2); margin: 0 2px; }
+  .hist-confirm { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600; color: var(--text); }
+  .hist-confirm .c-zero { color: var(--muted2); font-weight: 400; }
+  .hist-confirm .c-pending { color: #c07840; }
+  .hist-confirm .c-done { color: #2a8a3e; }
   .history-row:last-child { border-bottom: none; }
   .history-row.head { font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); background: var(--bg); padding: 9px 24px; }
   .history-row:not(.head):hover { background: var(--surface2); }
@@ -371,7 +380,7 @@
     </div>
     <div id="historyBody">
       <div class="history-row head">
-        <span>날짜</span><span>캠페인</span><span>실행자</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
+        <span>날짜</span><span>캠페인</span><span>실행자</span><span>게시물URL</span><span>감지 (피·스·프·총)</span><span>확정</span>
       </div>
     </div>
   </div>
@@ -886,34 +895,88 @@
     if (!rows.length) { sec.style.display = 'none'; return; }
     sec.style.display = 'block';
     body.innerHTML = `<div class="history-row head">
-      <span>날짜</span><span>캠페인</span><span>실행자</span><span>게시물URL</span><span>피드</span><span>스토리</span><span>프사</span><span>총계</span>
+      <span>날짜</span><span>캠페인</span><span>실행자</span><span>게시물URL</span><span>감지 (피·스·프·총)</span><span>확정</span>
     </div>` + rows.map((r, idx) => {
-      const users = (r['유저목록'] || '').split(',').map(u => u.trim()).filter(Boolean);
-      const total = parseInt(r['총계']) || 0;
-      const clickable = users.length > 0;
+      const detectedUsers = (r['유저목록'] || '').split(',').map(u => u.trim()).filter(Boolean);
+      const confirmedUsers = (r['확정유저목록'] || '').split(',').map(u => u.trim()).filter(Boolean);
+      const dFeed = parseInt(r['피드']) || 0;
+      const dStory = parseInt(r['스토리']) || 0;
+      const dProfile = parseInt(r['프사']) || 0;
+      const dTotal = parseInt(r['총계']) || 0;
+      const cTotal = parseInt(r['확정총계']) || 0;
+      const cFeed = parseInt(r['확정피드']) || 0;
+      const cStory = parseInt(r['확정스토리']) || 0;
+      const cProfile = parseInt(r['확정프사']) || 0;
+      const clickable = detectedUsers.length > 0;
       const rowId = `hist-row-${idx}`;
+      const campaign = r['캠페인'] || '';
+      // 확정 표시 — 0=회색(미진행), 부분=주황(진행중), 같음=초록(완료)
+      let confirmClass = 'c-zero', confirmHtml = '0건';
+      if (cTotal > 0) {
+        confirmClass = (cTotal === dTotal) ? 'c-done' : 'c-pending';
+        confirmHtml = `${cTotal}건`;
+      } else if (dTotal === 0) {
+        confirmHtml = '—';
+      }
       return `
-      <div class="history-row" ${clickable ? `style="cursor:pointer" onclick="toggleHistoryDetail('${rowId}')"` : ''}>
+      <div class="history-row" ${clickable ? `style="cursor:pointer" onclick="toggleHistoryDetail('${rowId}', '${campaign.replace(/'/g, "\\'")}')"` : ''}>
         <span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted)">${clickable ? '▸ ' : '  '}${r['날짜'] || ''}</span>
-        <span style="font-size:11px;color:var(--text)">${r['캠페인'] || '—'}</span>
+        <span style="font-size:11px;color:var(--text)">${campaign || '—'}</span>
         <span style="font-size:11px;color:var(--muted)">${r['실행자'] || '—'}</span>
         <span class="hist-url">${r['게시물URL'] ? `<a href="${r['게시물URL']}" target="_blank" onclick="event.stopPropagation()" style="color:var(--accent-dark);text-decoration:none">${r['게시물URL']}</a>` : '—'}</span>
-        <span class="hist-num" style="color:var(--accent-dark)">${r['피드'] || 0}</span>
-        <span class="hist-num" style="color:#c07840">${r['스토리'] || 0}</span>
-        <span class="hist-num" style="color:#4878b8">${r['프사'] || 0}</span>
-        <span class="hist-num" style="color:var(--text)">${total}건</span>
+        <span class="hist-detect">
+          <span class="d-feed">${dFeed}</span><span class="d-sep">·</span><span class="d-story">${dStory}</span><span class="d-sep">·</span><span class="d-profile">${dProfile}</span><span class="d-sep">·</span><span style="color:var(--muted)">${dTotal}건</span>
+        </span>
+        <span class="hist-confirm"><span class="${confirmClass}">${confirmHtml}</span></span>
       </div>
       ${clickable ? `
-        <div id="${rowId}" class="history-detail" style="display:none; padding: 12px 24px 16px; background:#FAFAF7; border-bottom:1px solid var(--border); font-size:11px;">
-          <div style="margin-bottom:8px; color:var(--muted); font-family:'DM Mono',monospace; font-size:10px;">감지 유저 ${users.length}명 · 클릭하면 인스타 프로필 열림</div>
+        <div id="${rowId}" class="history-detail" style="display:none; padding: 14px 24px 16px; background:#FAFAF7; border-bottom:1px solid var(--border); font-size:11px;">
+          ${confirmedUsers.length ? `
+            <div style="margin-bottom:6px; color:var(--text); font-family:'DM Mono',monospace; font-size:10px;">✓ 확정 ${confirmedUsers.length}명 (피드 ${cFeed}·스토리 ${cStory}·프사 ${cProfile})</div>
+            <div style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:14px;">
+              ${confirmedUsers.map(u => `<a href="https://www.instagram.com/${u}/" target="_blank" style="display:inline-block; padding:4px 10px; background:#E8F4EA; border:1px solid #B8DDC0; border-radius:14px; color:#2a8a3e; text-decoration:none; font-family:'DM Mono',monospace; font-size:10px;" onmouseover="this.style.background='#D4EDD8'" onmouseout="this.style.background='#E8F4EA'">@${u}</a>`).join('')}
+            </div>
+          ` : ''}
+          <div style="margin-bottom:6px; color:var(--muted); font-family:'DM Mono',monospace; font-size:10px;">감지 ${detectedUsers.length}명 (검수 전 후보 포함)</div>
           <div style="display:flex; flex-wrap:wrap; gap:6px;">
-            ${users.map(u => `<a href="https://www.instagram.com/${u}/" target="_blank" style="display:inline-block; padding:4px 10px; background:white; border:1px solid var(--border); border-radius:14px; color:var(--text); text-decoration:none; font-family:'DM Mono',monospace; font-size:10px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent-dark)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text)'">@${u}</a>`).join('')}
+            ${detectedUsers.map(u => {
+              const isConfirmed = confirmedUsers.includes(u);
+              return isConfirmed
+                ? `<a href="https://www.instagram.com/${u}/" target="_blank" style="display:inline-block; padding:4px 10px; background:#E8F4EA; border:1px solid #B8DDC0; border-radius:14px; color:#2a8a3e; text-decoration:none; font-family:'DM Mono',monospace; font-size:10px;">@${u} ✓</a>`
+                : `<a href="https://www.instagram.com/${u}/" target="_blank" style="display:inline-block; padding:4px 10px; background:white; border:1px solid var(--border); border-radius:14px; color:var(--muted); text-decoration:none; font-family:'DM Mono',monospace; font-size:10px;" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent-dark)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--muted)'">@${u}</a>`;
+            }).join('')}
           </div>
-          <div style="margin-top:10px; color:var(--muted2); font-size:10px;">💡 유형(피드/스토리/프사)·검수 상태 자세히는 위 "캠페인별 누적 확정" 섹션 참고</div>
+          ${campaign ? `<div style="margin-top:12px;"><button onclick="event.stopPropagation(); jumpToCumulative('${campaign.replace(/'/g, "\\'")}')" style="font-family:'DM Mono',monospace; font-size:10px; padding:5px 12px; background:var(--accent-light); color:var(--accent-dark); border:1px solid var(--accent); border-radius:6px; cursor:pointer;">↓ 이 캠페인 누적 확정 보기</button></div>` : ''}
         </div>
       ` : ''}
     `;}).join('');
   }
+
+  // 히스토리 행에서 클릭하면 그 캠페인의 누적 확정 섹션으로 자동 점프 + 필터
+  window.jumpToCumulative = function(campaign) {
+    const sel = document.getElementById('cumulativeSelect');
+    if (!sel) return;
+    // option 이 아직 없으면 잠시 후 재시도
+    const tryJump = () => {
+      const opt = Array.from(sel.options).find(o => o.value === campaign);
+      if (opt) {
+        sel.value = campaign;
+        loadCumulative();
+        document.getElementById('cumulativeSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+      } else {
+        // cumulative 리스트가 아직 안 불러와짐 → 한 번 더 로드 후 재시도
+        loadCumulativeList().then(() => {
+          const opt2 = Array.from(sel.options).find(o => o.value === campaign);
+          if (opt2) {
+            sel.value = campaign;
+            loadCumulative();
+            document.getElementById('cumulativeSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+          }
+        });
+      }
+    };
+    tryJump();
+  };
 
   window.toggleHistoryDetail = function(rowId) {
     const el = document.getElementById(rowId);
