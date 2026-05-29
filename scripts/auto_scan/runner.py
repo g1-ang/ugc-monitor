@@ -233,8 +233,15 @@ def process_campaign(c: dict, ss) -> dict:
 
 
 def main():
+    import argparse
+    p = argparse.ArgumentParser()
+    p.add_argument("--date", help="대상 게시일 (YYYY-MM-DD). 기본: 어제")
+    args = p.parse_args()
     today = datetime.date.today()
-    yesterday = today - datetime.timedelta(days=1)
+    if args.date:
+        yesterday = datetime.date.fromisoformat(args.date)
+    else:
+        yesterday = today - datetime.timedelta(days=1)
     log(f"=== 자동 스캔 시작 — 대상 게시일: {yesterday} ===")
 
     try:
