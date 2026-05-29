@@ -3,7 +3,8 @@ from __future__ import annotations
 import os, requests
 
 SLACK_WEBHOOK = os.getenv("SLACK_WEBHOOK_URL",
-    "https://hooks.slack.com/services/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")
+    # 기본: "프롬프트 테스트 알림이" 봇 → #team_kr-contents_mkt
+    "https://hooks.slack.com/services/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")
 
 
 def notify(text: str) -> bool:
