@@ -211,8 +211,8 @@ def process_campaign(c: dict, ss) -> dict:
         raise RuntimeError(f"/scan HTTP {r.status_code}: {r.text[:300]}")
     log(f"     스캔 시작됨")
 
-    # 완료 폴링 (최대 1시간)
-    deadline = time.time() + 3600
+    # 완료 폴링 (최대 3시간 — 583명대 대형 스캔은 ~70분 걸림)
+    deadline = time.time() + 10800
     stats = None
     while time.time() < deadline:
         time.sleep(30)
@@ -228,7 +228,7 @@ def process_campaign(c: dict, ss) -> dict:
             raise RuntimeError(f"스캔 실패: {d.get('step', '?')}")
         log(f"     progress={prog}% | {d.get('step', '')}")
     if stats is None:
-        raise RuntimeError("스캔 완료 폴링 timeout (1시간)")
+        raise RuntimeError("스캔 완료 폴링 timeout (3시간)")
     return stats
 
 
