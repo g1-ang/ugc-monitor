@@ -191,9 +191,9 @@ def process_campaign(c: dict, ss) -> dict:
         raise RuntimeError("노션 페이지에 첨부 이미지가 없음 (최소 1장 필요)")
     log(f"     프롬프트 {len(notion['prompt'])}자, 이미지 {len(notion['images'])}장")
 
-    log(f"  → 댓글 수집 (Apify): {c['post_url']}")
-    csv_bytes = fetch_comments_csv(c['post_url'], limit=1500)
-    log(f"     CSV 크기: {len(csv_bytes)} bytes")
+    log(f"  → 댓글 수집 (Chrome 확장 → Apify 폴백): {c['post_url']}")
+    csv_bytes, source = fetch_comments_csv(c['post_url'], limit=1500)
+    log(f"     CSV 크기: {len(csv_bytes)} bytes (source: {source})")
 
     log(f"  → /scan API 호출")
     files = [("comment_file", (f"comments_{c['campaign']}.csv", csv_bytes, "text/csv"))]

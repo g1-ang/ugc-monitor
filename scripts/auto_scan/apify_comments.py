@@ -1,12 +1,38 @@
-"""Apify 댓글 actor 호출 → 댓글 CSV 파일 생성."""
+"""댓글 CSV 수집 — Chrome 확장 다운로드 우선, 없으면 Apify 폴백."""
 from __future__ import annotations
-import os, csv, io, time, requests
+import os, re, csv, io, time, glob, requests
+from pathlib import Path
 from typing import Optional
 
 
 APIFY_TOKEN = os.getenv("APIFY_API_TOKEN")
 ACTOR_ID = "apify~instagram-comment-scraper"
 APIFY_BASE = "https://api.apify.com/v2"
+DOWNLOADS_DIR = Path.home() / "Downloads"
+
+
+def _extract_shortcode(post_url: str) -> Optional[str]:
+    """게시물 URL → shortcode (예: DY6qpO6TQDj)."""
+    m = re.search(r"/(?:p|reel)/([A-Za-z0-9_-]+)", post_url)
+    return m.group(1) if m else None
+
+
+def find_local_comments_csv(post_url: str) -> Optional[Path]:
+    """Chrome 확장이 ~/Downloads/@{user}/comments/ 에 저장한 CSV 중
+    같은 shortcode 가진 가장 최근 파일 반환. 없으면 None.
+
+    파일명 규칙: {YYYYMMDD_HHMMSS}_{shortcode}.csv"""
+    sc = _extract_shortcode(post_url)
+    if not sc:
+        return None
+    # ~/Downloads/@*/comments/*{shortcode}*.csv  glob
+    pattern = str(DOWNLOADS_DIR / "@*" / "comments" / f"*_{sc}.csv")
+    matches = glob.glob(pattern)
+    if not matches:
+        return None
+    # 가장 최근 mtime
+    matches.sort(key=lambda p: os.path.getmtime(p), reverse=True)
+    return Path(matches[0])
 
 
 def fetch_comments(post_url: str, limit: int = 1500, timeout_sec: int = 900) -> list[dict]:
@@ -74,10 +100,19 @@ def comments_to_csv_bytes(comments: list[dict]) -> bytes:
     return ("﻿" + buf.getvalue()).encode("utf-8")
 
 
-def fetch_comments_csv(post_url: str, limit: int = 1000) -> bytes:
-    """게시물 URL → CSV bytes (한 번에)."""
+def fetch_comments_csv(post_url: str, limit: int = 1000) -> tuple[bytes, str]:
+    """게시물 URL → (CSV bytes, source).
+    source: "chrome_extension" 또는 "apify"
+
+    1) ~/Downloads/@*/comments/ 에서 shortcode 매칭 CSV 찾으면 그거 사용 (무료, 정확)
+    2) 못 찾으면 Apify 호출 (비용 ~$0.75, 보장)"""
+    local = find_local_comments_csv(post_url)
+    if local:
+        with open(local, "rb") as f:
+            return f.read(), f"chrome_extension ({local.name})"
+    # 폴백: Apify
     comments = fetch_comments(post_url, limit=limit)
-    return comments_to_csv_bytes(comments)
+    return comments_to_csv_bytes(comments), "apify"
 
 
 if __name__ == "__main__":
