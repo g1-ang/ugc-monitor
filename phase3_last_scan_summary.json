@@ -1,32 +1,32 @@
 {
-  "campaign": "모래낙서샷",
-  "reviewer": "EPIK",
-  "post_url": "https://www.instagram.com/p/DY1yMdflP7M/",
-  "finished_at": "2026-05-29T19:46:50.990296",
-  "commenters": 583,
-  "candidates": 583,
+  "campaign": "차 안 거울샷",
+  "reviewer": "SODA",
+  "post_url": "https://www.instagram.com/p/DY6qpO6TQDj/",
+  "finished_at": "2026-05-29T22:21:37.144586",
+  "commenters": 45,
+  "candidates": 45,
   "phase3_stats": {
     "profile": {
-      "scanned": 583,
-      "yes": 9,
-      "no": 574
+      "scanned": 45,
+      "yes": 0,
+      "no": 45
     },
     "feed": {
-      "scanned": 1668,
-      "yes": 8,
-      "no": 1660
+      "scanned": 72,
+      "yes": 0,
+      "no": 72
     },
     "story": {
-      "scanned": 229,
-      "yes": 7,
-      "no": 222,
+      "scanned": 9,
+      "yes": 0,
+      "no": 9,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 8,
-    "story": 7,
-    "profile": 9,
-    "total": 24
+    "feed": 0,
+    "story": 0,
+    "profile": 0,
+    "total": 0
   }
 }
