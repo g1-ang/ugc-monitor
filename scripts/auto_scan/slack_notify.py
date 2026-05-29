@@ -27,7 +27,7 @@ def notify_scan_done(campaign: str, stats: dict, dashboard_url: str = "http://lo
     profile = stats.get("profile", 0)
     total   = feed + story + profile
     text = (
-        f"🤖 [UGC 모니터]  @{campaign}  스캔 완료\n\n"
+        f"🤖 [오가닉 모니터링]  @{campaign}  스캔 완료\n\n"
         f"✅ 감지: {total}명 (피드 {feed} / 스토리 {story} / 프사 {profile})\n"
         f"⏳ 검수 대기 중\n\n"
         f"🔗 결과 보기: {dashboard_url}"
@@ -37,7 +37,7 @@ def notify_scan_done(campaign: str, stats: dict, dashboard_url: str = "http://lo
 
 def notify_scan_error(campaign: str, err: str) -> bool:
     text = (
-        f"⚠️ [UGC 모니터]  @{campaign}  스캔 실패\n\n"
+        f"⚠️ [오가닉 모니터링]  @{campaign}  스캔 실패\n\n"
         f"```{err[:500]}```"
     )
     return notify(text)
