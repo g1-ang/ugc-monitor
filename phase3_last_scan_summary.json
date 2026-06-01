@@ -1,32 +1,32 @@
 {
-  "campaign": "차 안 거울샷",
-  "reviewer": "SODA",
-  "post_url": "https://www.instagram.com/p/DY6qpO6TQDj/",
-  "finished_at": "2026-05-29T22:21:37.144586",
-  "commenters": 45,
-  "candidates": 45,
+  "campaign": "증사 포토부스샷",
+  "reviewer": "전지원",
+  "post_url": "https://www.instagram.com/p/DY_bG6sFBL3",
+  "finished_at": "2026-06-01T13:48:20.134735",
+  "commenters": 639,
+  "candidates": 639,
   "phase3_stats": {
     "profile": {
-      "scanned": 45,
-      "yes": 0,
-      "no": 45
+      "scanned": 639,
+      "yes": 5,
+      "no": 634
     },
     "feed": {
-      "scanned": 72,
-      "yes": 0,
-      "no": 72
+      "scanned": 1491,
+      "yes": 3,
+      "no": 1488
     },
     "story": {
-      "scanned": 9,
-      "yes": 0,
-      "no": 9,
+      "scanned": 177,
+      "yes": 12,
+      "no": 165,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 0,
-    "story": 0,
-    "profile": 0,
-    "total": 0
+    "feed": 3,
+    "story": 12,
+    "profile": 5,
+    "total": 20
   }
 }
