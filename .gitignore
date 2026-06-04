@@ -11,6 +11,7 @@ phase3_candidates.json
 phase3_results.json
 phase3_failures.json
 phase3_retest_results.json
+phase3_last_scan_summary.json
 phase3_*.json.bak
 phase3_*.log
 phase3_matched.csv
