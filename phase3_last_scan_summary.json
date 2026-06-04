@@ -1,8 +1,8 @@
 {
   "campaign": "아쿠아리움샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DZFC6xzlDW8/?img_index=1",
-  "finished_at": "2026-06-04T13:37:40.765273",
+  "post_url": "https://www.instagram.com/p/DZFC6xzlDW8/",
+  "finished_at": "2026-06-04T15:00:27.667350",
   "commenters": 885,
   "candidates": 883,
   "phase3_stats": {
@@ -12,14 +12,14 @@
       "no": 883
     },
     "feed": {
-      "scanned": 2097,
+      "scanned": 2095,
       "yes": 0,
-      "no": 2097
+      "no": 2095
     },
     "story": {
-      "scanned": 293,
+      "scanned": 281,
       "yes": 0,
-      "no": 293,
+      "no": 281,
       "extract_fail": 0
     }
   },
