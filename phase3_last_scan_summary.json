@@ -1,32 +1,32 @@
 {
-  "campaign": "증사 포토부스샷",
+  "campaign": "아쿠아리움샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DY_bG6sFBL3",
-  "finished_at": "2026-06-01T13:48:20.134735",
-  "commenters": 639,
-  "candidates": 639,
+  "post_url": "https://www.instagram.com/p/DZFC6xzlDW8/?img_index=1",
+  "finished_at": "2026-06-04T13:37:40.765273",
+  "commenters": 885,
+  "candidates": 883,
   "phase3_stats": {
     "profile": {
-      "scanned": 639,
-      "yes": 5,
-      "no": 634
+      "scanned": 883,
+      "yes": 0,
+      "no": 883
     },
     "feed": {
-      "scanned": 1491,
-      "yes": 3,
-      "no": 1488
+      "scanned": 2097,
+      "yes": 0,
+      "no": 2097
     },
     "story": {
-      "scanned": 177,
-      "yes": 12,
-      "no": 165,
+      "scanned": 293,
+      "yes": 0,
+      "no": 293,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 3,
-    "story": 12,
-    "profile": 5,
-    "total": 20
+    "feed": 0,
+    "story": 0,
+    "profile": 0,
+    "total": 0
   }
 }
