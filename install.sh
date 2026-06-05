@@ -12,14 +12,31 @@ echo "  UGC Monitor — 최초 설치"
 echo "════════════════════════════════════════════════"
 echo
 
-# 1. Python 3.9+ 체크
+# 1. Python 3.11-3.13 체크 (3.14+ 는 일부 패키지 wheel 미지원)
 echo "1️⃣  Python 버전 체크..."
-if ! command -v python3 >/dev/null 2>&1; then
-    echo "   ❌ python3 가 없습니다. https://www.python.org/downloads/ 에서 3.11+ 설치 후 재실행"
+# python3.12 우선, 없으면 python3
+PY_BIN=""
+for v in 3.12 3.13 3.11; do
+    if command -v "python$v" >/dev/null 2>&1; then
+        PY_BIN="python$v"
+        break
+    fi
+done
+if [ -z "$PY_BIN" ] && command -v python3 >/dev/null 2>&1; then
+    PYV=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
+    PYMAJOR=$(echo $PYV | cut -d. -f1)
+    PYMINOR=$(echo $PYV | cut -d. -f2)
+    if [ "$PYMAJOR" = "3" ] && [ "$PYMINOR" -ge 11 ] && [ "$PYMINOR" -le 13 ]; then
+        PY_BIN="python3"
+    fi
+fi
+if [ -z "$PY_BIN" ]; then
+    echo "   ❌ Python 3.11/3.12/3.13 이 필요합니다 (3.14+ 는 sentence-transformers/Pillow wheel 미지원)"
+    echo "   👉 설치: brew install python@3.12"
+    echo "      또는 python.org/downloads 에서 3.12 인스톨러"
     exit 1
 fi
-PYV=$(python3 -c "import sys; print(f'{sys.version_info.major}.{sys.version_info.minor}')")
-echo "   ✅ Python $PYV 발견"
+echo "   ✅ $PY_BIN 사용"
 
 # 2. venv 생성
 echo
@@ -27,8 +44,8 @@ echo "2️⃣  가상환경 생성..."
 if [ -d "venv" ]; then
     echo "   venv 폴더 이미 있음 — 건너뜀"
 else
-    python3 -m venv venv
-    echo "   ✅ venv 생성됨"
+    $PY_BIN -m venv venv
+    echo "   ✅ venv 생성됨 ($PY_BIN)"
 fi
 
 # 3. 의존성 설치
