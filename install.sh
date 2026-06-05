@@ -36,7 +36,8 @@ echo
 echo "3️⃣  Python 패키지 설치 중 (5-10분 소요, sentence-transformers + torch 다운로드)..."
 source venv/bin/activate
 pip install --upgrade pip --quiet
-pip install --no-cache-dir torch==2.9.0+cpu --index-url https://download.pytorch.org/whl/cpu --quiet
+# macOS 는 어차피 CPU 빌드만 사용 (NVIDIA GPU 없음) — 버전 고정 X, PyPI 최신
+pip install --no-cache-dir torch --quiet
 pip install -r ugc-monitor-api/requirements.txt --quiet
 echo "   ✅ 패키지 설치 완료"
 
