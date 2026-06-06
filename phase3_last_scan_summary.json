@@ -1,32 +1,32 @@
 {
-  "campaign": "아쿠아리움샷",
+  "campaign": "전면 거울셀카",
   "reviewer": "전지원",
-  "post_url": "",
-  "finished_at": "2026-06-06T22:59:20.281310",
-  "commenters": 931,
-  "candidates": 927,
+  "post_url": "https://www.instagram.com/p/DZMkW9ZlAuh/?img_index=1",
+  "finished_at": "2026-06-06T23:24:28.694979",
+  "commenters": 461,
+  "candidates": 459,
   "phase3_stats": {
     "profile": {
-      "scanned": 927,
-      "yes": 0,
-      "no": 927
+      "scanned": 459,
+      "yes": 4,
+      "no": 455
     },
     "feed": {
-      "scanned": 2065,
-      "yes": 0,
-      "no": 2065
+      "scanned": 843,
+      "yes": 1,
+      "no": 842
     },
     "story": {
-      "scanned": 317,
-      "yes": 0,
-      "no": 317,
+      "scanned": 143,
+      "yes": 5,
+      "no": 138,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 0,
-    "story": 0,
-    "profile": 0,
-    "total": 0
+    "feed": 1,
+    "story": 5,
+    "profile": 4,
+    "total": 10
   }
 }
