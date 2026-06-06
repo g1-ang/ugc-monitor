@@ -2,24 +2,24 @@
   "campaign": "아쿠아리움샷",
   "reviewer": "전지원",
   "post_url": "",
-  "finished_at": "2026-06-05T18:16:03.771418",
+  "finished_at": "2026-06-06T22:59:20.281310",
   "commenters": 931,
-  "candidates": 929,
+  "candidates": 927,
   "phase3_stats": {
     "profile": {
-      "scanned": 929,
+      "scanned": 927,
       "yes": 0,
-      "no": 929
+      "no": 927
     },
     "feed": {
-      "scanned": 2099,
+      "scanned": 2065,
       "yes": 0,
-      "no": 2099
+      "no": 2065
     },
     "story": {
-      "scanned": 290,
+      "scanned": 317,
       "yes": 0,
-      "no": 290,
+      "no": 317,
       "extract_fail": 0
     }
   },
