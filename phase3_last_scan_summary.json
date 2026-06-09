@@ -1,32 +1,32 @@
 {
-  "campaign": "전면 거울셀카",
+  "campaign": "키티안경샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DZMkW9ZlAuh/?img_index=1",
-  "finished_at": "2026-06-08T12:00:05.744291",
-  "commenters": 598,
-  "candidates": 595,
+  "post_url": "https://www.instagram.com/p/DZUUO25lHfG/?img_index=1",
+  "finished_at": "2026-06-09T19:47:22.764831",
+  "commenters": 486,
+  "candidates": 486,
   "phase3_stats": {
     "profile": {
-      "scanned": 595,
-      "yes": 7,
-      "no": 588
+      "scanned": 486,
+      "yes": 5,
+      "no": 481
     },
     "feed": {
-      "scanned": 1088,
-      "yes": 1,
-      "no": 1087
+      "scanned": 1049,
+      "yes": 3,
+      "no": 1046
     },
     "story": {
-      "scanned": 171,
-      "yes": 1,
-      "no": 170,
+      "scanned": 210,
+      "yes": 2,
+      "no": 208,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 1,
-    "story": 1,
-    "profile": 7,
-    "total": 9
+    "feed": 3,
+    "story": 2,
+    "profile": 5,
+    "total": 10
   }
 }
