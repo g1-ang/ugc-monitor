@@ -2,31 +2,31 @@
   "campaign": "키티안경샷",
   "reviewer": "전지원",
   "post_url": "https://www.instagram.com/p/DZUUO25lHfG/?img_index=1",
-  "finished_at": "2026-06-09T19:47:22.764831",
-  "commenters": 486,
-  "candidates": 486,
+  "finished_at": "2026-06-11T01:02:53.038192",
+  "commenters": 601,
+  "candidates": 600,
   "phase3_stats": {
     "profile": {
-      "scanned": 486,
-      "yes": 5,
-      "no": 481
+      "scanned": 600,
+      "yes": 9,
+      "no": 591
     },
     "feed": {
-      "scanned": 1049,
-      "yes": 3,
-      "no": 1046
+      "scanned": 1203,
+      "yes": 5,
+      "no": 1198
     },
     "story": {
-      "scanned": 210,
-      "yes": 2,
-      "no": 208,
+      "scanned": 264,
+      "yes": 4,
+      "no": 260,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 3,
-    "story": 2,
-    "profile": 5,
-    "total": 10
+    "feed": 5,
+    "story": 4,
+    "profile": 9,
+    "total": 18
   }
 }
