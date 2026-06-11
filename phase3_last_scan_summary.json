@@ -1,32 +1,32 @@
 {
-  "campaign": "키티안경샷",
+  "campaign": "바다2컷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DZUUO25lHfG/?img_index=1",
-  "finished_at": "2026-06-11T01:02:53.038192",
-  "commenters": 601,
-  "candidates": 600,
+  "post_url": "https://www.instagram.com/p/DZZkzq2FEWR/?img_index=1",
+  "finished_at": "2026-06-11T12:10:52.773282",
+  "commenters": 592,
+  "candidates": 592,
   "phase3_stats": {
     "profile": {
-      "scanned": 600,
-      "yes": 9,
-      "no": 591
+      "scanned": 592,
+      "yes": 10,
+      "no": 582
     },
     "feed": {
-      "scanned": 1203,
+      "scanned": 1363,
       "yes": 5,
-      "no": 1198
+      "no": 1358
     },
     "story": {
-      "scanned": 264,
-      "yes": 4,
-      "no": 260,
+      "scanned": 245,
+      "yes": 7,
+      "no": 238,
       "extract_fail": 0
     }
   },
   "confirmed": {
     "feed": 5,
-    "story": 4,
-    "profile": 9,
-    "total": 18
+    "story": 7,
+    "profile": 10,
+    "total": 22
   }
 }
