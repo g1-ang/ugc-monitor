@@ -1,32 +1,32 @@
 {
-  "campaign": "바다2컷",
+  "campaign": "프링글스샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DZZkzq2FEWR/?img_index=1",
-  "finished_at": "2026-06-11T12:10:52.773282",
-  "commenters": 592,
-  "candidates": 592,
+  "post_url": "https://www.instagram.com/p/DZcBjugFIRV/?img_index=1",
+  "finished_at": "2026-06-12T09:04:21.268102",
+  "commenters": 298,
+  "candidates": 298,
   "phase3_stats": {
     "profile": {
-      "scanned": 592,
-      "yes": 10,
-      "no": 582
+      "scanned": 298,
+      "yes": 3,
+      "no": 295
     },
     "feed": {
-      "scanned": 1363,
-      "yes": 5,
-      "no": 1358
+      "scanned": 565,
+      "yes": 1,
+      "no": 564
     },
     "story": {
-      "scanned": 245,
-      "yes": 7,
-      "no": 238,
+      "scanned": 115,
+      "yes": 3,
+      "no": 112,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 5,
-    "story": 7,
-    "profile": 10,
-    "total": 22
+    "feed": 1,
+    "story": 3,
+    "profile": 3,
+    "total": 7
   }
 }
