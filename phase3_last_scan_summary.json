@@ -1,32 +1,32 @@
 {
-  "campaign": "프링글스샷",
+  "campaign": "과일 에이드샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DZcBjugFIRV/?img_index=1",
-  "finished_at": "2026-06-12T09:04:21.268102",
-  "commenters": 298,
-  "candidates": 298,
+  "post_url": "https://www.instagram.com/p/DaSOW8SlBSR/?img_index=1",
+  "finished_at": "2026-07-03T20:31:34.896288",
+  "commenters": 521,
+  "candidates": 521,
   "phase3_stats": {
     "profile": {
-      "scanned": 298,
-      "yes": 3,
-      "no": 295
+      "scanned": 521,
+      "yes": 5,
+      "no": 516
     },
     "feed": {
-      "scanned": 565,
-      "yes": 1,
-      "no": 564
+      "scanned": 1156,
+      "yes": 3,
+      "no": 1153
     },
     "story": {
-      "scanned": 115,
-      "yes": 3,
-      "no": 112,
+      "scanned": 237,
+      "yes": 8,
+      "no": 229,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 1,
-    "story": 3,
-    "profile": 3,
-    "total": 7
+    "feed": 3,
+    "story": 8,
+    "profile": 5,
+    "total": 16
   }
 }
