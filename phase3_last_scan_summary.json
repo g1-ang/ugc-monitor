@@ -1,32 +1,32 @@
 {
-  "campaign": "과일 에이드샷",
+  "campaign": "쿠키프사샷",
   "reviewer": "전지원",
-  "post_url": "https://www.instagram.com/p/DaSOW8SlBSR/?img_index=1",
-  "finished_at": "2026-07-03T20:31:34.896288",
-  "commenters": 521,
-  "candidates": 521,
+  "post_url": "https://www.instagram.com/p/DaU2rrOFPq3",
+  "finished_at": "2026-07-07T12:38:08.567222",
+  "commenters": 887,
+  "candidates": 887,
   "phase3_stats": {
     "profile": {
-      "scanned": 521,
-      "yes": 5,
-      "no": 516
+      "scanned": 887,
+      "yes": 13,
+      "no": 874
     },
     "feed": {
-      "scanned": 1156,
-      "yes": 3,
-      "no": 1153
+      "scanned": 1509,
+      "yes": 5,
+      "no": 1504
     },
     "story": {
-      "scanned": 237,
-      "yes": 8,
-      "no": 229,
+      "scanned": 235,
+      "yes": 3,
+      "no": 232,
       "extract_fail": 0
     }
   },
   "confirmed": {
-    "feed": 3,
-    "story": 8,
-    "profile": 5,
-    "total": 16
+    "feed": 5,
+    "story": 3,
+    "profile": 13,
+    "total": 21
   }
 }
